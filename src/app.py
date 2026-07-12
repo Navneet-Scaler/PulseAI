@@ -77,7 +77,6 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_style_color=True,
     unsafe_allow_html=True
 )
 
