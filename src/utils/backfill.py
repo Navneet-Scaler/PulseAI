@@ -10,7 +10,8 @@ from src.core.ai_coder import AICoder
 from src.core.auditor import AuditorSimulator
 from src.core.denial_simulator import DenialSimulator
 
-DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlite:///", "")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(PROJECT_ROOT, 'pulse_ai.db')}").replace("sqlite:///", "")
 
 def run_backfill(num_days: int = 30, events_per_day: int = 85):
     print(f"Starting backfill for the last {num_days} days. Total target: {num_days * events_per_day} encounters.")
@@ -20,10 +21,12 @@ def run_backfill(num_days: int = 30, events_per_day: int = 85):
     
     # Initialize schema
     schema_path = os.path.join(os.path.dirname(__file__), "../../sql/schema.sql")
-    if os.path.exists(schema_path):
-        with open(schema_path, "r") as f:
-            schema = f.read()
-        cursor.executescript(schema)
+    if not os.path.exists(schema_path):
+        raise FileNotFoundError(f"Database schema file not found at: {schema_path}")
+        
+    with open(schema_path, "r") as f:
+        schema = f.read()
+    cursor.executescript(schema)
         
     start_date = date.today() - timedelta(days=num_days)
     

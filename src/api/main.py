@@ -15,7 +15,8 @@ from src.core.denial_simulator import DenialSimulator
 
 app = FastAPI(title="Pulse AI RCM Telemetry API", version="1.0.0")
 
-DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlite:///", "")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(PROJECT_ROOT, 'pulse_ai.db')}").replace("sqlite:///", "")
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
