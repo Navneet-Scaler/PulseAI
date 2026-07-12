@@ -1,93 +1,112 @@
 # Pulse AI - Revenue Cycle Management (RCM) Intelligence Platform
 
-Pulse AI is a premium, portfolio-grade Revenue Cycle Management (RCM) telemetry and billing intelligence simulator. The platform models autonomous AI medical coding (mapping patient visit clinical notes to ICD-10 and CPT codes), human-in-the-loop audit workflows, and payer claim processing. It offers real-time API telemetry ingestion, advanced SQL analytics, A/B testing billing analysis, and a high-fidelity interactive Streamlit dashboard.
+Pulse AI is an enterprise-grade Revenue Cycle Management (RCM) billing intelligence and simulation platform. The system models autonomous AI-driven medical coding (predicting CPT/ICD-10 codes from clinical notes), human-in-the-loop audit workflows, and insurance payer claim adjudication. It features real-time API telemetry ingestion, advanced SQL KPI calculations, A/B testing analysis, and a high-density, professional operational command center dashboard.
 
 ---
 
-## ⚡ Key Highlights
-* **Core Simulator Engine**: Simulates medical encounter creation, model inference, audit queues, and insurance billing response.
-* **FastAPI Backend**: Real-time telemetry logging conforming to a strict validation layer using **Pydantic v2** models.
-* **SQL KPI Engine**: Pre-baked database scripts to compute Denial Rate, Clean Claim Rate, Automation Rate, and Auditor Correction Rate.
-* **Streamlit Command Center**: A rich, premium dark-themed dashboard showing executive summaries, AI confidence calibration, denial analytics, revenue leakage, auditor workload, and A/B test results.
-* **A/B Testing & Power Analysis**: Jupyter notebook demonstrating cohort analysis, proportions Z-testing, and statistical power analysis for model upgrades.
+## Core System Architecture
+
+The platform simulates a real-world healthcare billing pipeline containing four distinct lifecycle stages:
+
+1. **Clinical Encounter Ingestion**: Patient visits are registered with clinical notes, primary symptoms, medical specialty, and ground-truth codes.
+2. **Autonomous AI Coding**: A simulated AI coder analyzes clinical documentation, predicting ICD-10 diagnostic codes and CPT procedural codes, assigning an internal confidence score.
+3. **Operational Quality Audit**: Claims with AI confidence scores falling below a tunable threshold are routed to human auditor queues. Auditors review and correct coding errors.
+4. **Payer Adjudication (Denial Simulator)**: Claims are submitted to payers. Claims carrying uncorrected coding errors are denied at a high rate (90%), while clean claims are paid out at contracted allowed rates, subject to payer-specific baseline denial rates.
 
 ---
 
-## 📂 Directory Structure
+## Key Platform Features
+
+* **High-Density Corporate Dashboard**: Structured using a dark slate, high-contrast theme focused on core operational metrics.
+* **Dynamic Confidence Threshold Tuning**: Interactive optimization simulation allowing administrators to adjust AI routing thresholds to find the sweet spot maximizing net payouts (balancing prevented denials vs. human auditor labor costs).
+* **Advanced RCM Metrics**: Calculates critical financial metrics:
+  * **Days in Accounts Receivable (AR Days)**: Mean outstanding collection cycle time.
+  * **Clean Claim Rate (CCR)**: Percentage of claims paid on first submission without audit.
+  * **Auditor Labor ROI**: Financial returns of human reviews vs. audit labor overhead.
+  * **Contractual Underpayment Audits**: Highlights instances where insurers paid below the contracted allowed rate.
+* **AR Aging Buckets**: Dynamic categorization of outstanding claims (0-10 Days, 11-20 Days, 21+ Days) in a stacked bar chart to identify cash flow blockages.
+* **Payer Denial Heatmaps**: Visual correlation matrices plotting underwriters against specific denial reasons.
+
+---
+
+## Directory Structure
 
 ```
 Pulse AI/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # GitHub Actions CI workflow
+│       └── ci.yml             # GitHub Actions CI pipeline
 ├── sql/
-│   ├── schema.sql             # SQLite schema
-│   └── kpi_calculations.sql   # SQL analytics queries
+│   ├── schema.sql             # SQLite database schemas
+│   └── kpi_calculations.sql   # Advanced KPI analytics queries
 ├── schemas/
 │   └── telemetry_event.json   # Telemetry event JSON Schema
 ├── notebooks/
-│   └── ab_testing_analysis.ipynb # Jupyter A/B test notebook
+│   └── ab_testing_analysis.ipynb # A/B testing & power analysis notebook
 ├── src/
 │   ├── api/
 │   │   └── main.py            # FastAPI Web Server
 │   ├── core/
-│   │   ├── ai_coder.py        # AI Coding simulator stub
-│   │   ├── auditor.py         # Auditor reviewer simulation
-│   │   ├── denial_simulator.py # Insurance denial simulator
-│   │   └── generator.py       # Patient visit synthetic data generator
+│   │   ├── ai_coder.py        # Autonomous AI Coder stub
+│   │   ├── auditor.py         # Human Auditor simulation
+│   │   ├── denial_simulator.py # Insurance Adjudication simulator
+│   │   └── generator.py       # Patient visit generator
 │   ├── schemas/
 │   │   └── validation.py      # Pydantic v2 validation classes
 │   ├── utils/
-│   │   ├── backfill.py        # DB populate script
+│   │   ├── backfill.py        # Database backfill script (2,550 claims)
 │   │   ├── export.py          # Table exporter to CSV
 │   │   └── replay.py          # API ingestion replay stream
-│   └── app.py                 # Multi-page Streamlit Dashboard app
+│   └── app.py                 # Streamlit Command Center
 ├── tests/
 │   └── test_rcm.py            # Pytest test suite
-├── requirements.txt           # Main python dependencies
-├── .env.example               # Config environment settings
-├── .gitignore
+├── requirements.txt           # Platform python dependencies
+├── .env.example               # Configuration environment settings
 ├── LICENSE                    # MIT License
 └── README.md                  # This file
 ```
 
 ---
 
-## 🚀 Setup & Run Instructions
+## Setup & Run Instructions
 
 ### 1. Installation
-Clone the repository and install the dependencies:
+Clone the repository and install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Backfill Historical Data
-Pre-populate the SQLite database with 750 simulated patient visits and billing outcomes:
+### 2. Populate Database
+Initialize the SQLite database and backfill it with 2,550 historical claims spanning 30 days:
 ```bash
 python3 -m src.utils.backfill
 ```
 
-### 3. Run the Streamlit Dashboard
+### 3. Run the Dashboard
+Start the Streamlit RCM dashboard:
 ```bash
-streamlit run src/app.py
+python3 -m streamlit run src/app.py
 ```
 
-### 4. Run the FastAPI Telemetry Server
+### 4. Run the API Server
+Start the FastAPI telemetry server:
 ```bash
-uvicorn src.api.main:app --reload
+python3 -m uvicorn src.api.main:app --reload
+```
+Once started, view the interactive Swagger API documentation at:
+* **Interactive Docs**: `http://127.0.0.1:8000/docs`
+* **Health Check**: `http://127.0.0.1:8000/health`
+
+---
+
+## Testing
+
+Execute the test suite to verify generator logic, API routing, and validation schemas:
+```bash
+python3 -m pytest
 ```
 
 ---
 
-## 📊 Telemetry Event Schemas
-
-All event streams are validated via Pydantic v2. The lifecyle follows:
-1. `encounter_registered`: Capture demographic information, specialty, symptoms, and clinical notes.
-2. `ai_coding_processed`: AI model predicts ICD-10 & CPT codes with self-assessed confidence.
-3. `auditor_reviewed`: Triggered if confidence < 0.75; human auditor corrects codes.
-4. `payer_responded`: Insurance payment response showing Allowed Amount, Paid Amount, or Denial Reason.
-
----
-
-## 🛡️ License
-This project is licensed under the MIT License - see the [LICENSE](file:///Users/navneet/dev/projects/Pulse%20AI/LICENSE) file for details.
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
