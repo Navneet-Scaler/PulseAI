@@ -151,11 +151,13 @@ if os.path.exists(DB_PATH):
         count = cursor.fetchone()[0]
         if count > 0:
             db_needs_init = False
-
-            
-        conn.close()
     except Exception:
         db_needs_init = True
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 if db_needs_init:
     # If file exists but is corrupt/empty, remove it first to ensure clean backfill
