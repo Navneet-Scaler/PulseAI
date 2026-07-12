@@ -210,12 +210,15 @@ if st.sidebar.button("Run Simulation Step"):
         conn = sqlite3.connect(DB_PATH)
         res = run_simulation_step(conn)
         conn.close()
-        st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
+        st.session_state["last_encounter_id"] = res['encounter_id']
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
         st.rerun()
     except Exception as e:
         st.sidebar.error(f"Simulation execution failed: {e}")
+
+if "last_encounter_id" in st.session_state:
+    st.sidebar.success(f"Encounter Created: {st.session_state['last_encounter_id']}")
 
 # ----------------- MAIN LAYOUT & TABS -----------------
 st.title("Pulse Revenue Cycle Management Analytics Platform")
