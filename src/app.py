@@ -337,9 +337,9 @@ with tab1:
         x="specialty",
         y="charge_amount",
         color="aging_bucket",
-        title="Unrecovered Accounts Receivable by Aging Bucket & specialty",
+        title="Unrecovered Accounts Receivable by Aging Bucket & Specialty",
         labels={"charge_amount": "Outstanding Amount ($)", "specialty": "Clinical Division", "aging_bucket": "AR Age Bucket"},
-        color_discrete_sequence=px.colors.qualitative.Slate,
+        color_discrete_sequence=["#2563eb", "#f59e0b", "#ef4444"],
         template="plotly_dark"
     )
     fig_aging.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
