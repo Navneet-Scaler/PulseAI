@@ -8,80 +8,96 @@ import plotly.graph_objects as go
 import streamlit as st
 from datetime import datetime, date
 
-# Set page config with professional enterprise theme styling
+# Set page config with professional high-density terminal theme styling
 st.set_page_config(
-    page_title="Pulse AI RCM Platform",
+    page_title="PULSE RCM OPERATIONAL TERMINAL",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Professional Enterprise Custom CSS styling
+# Custom Bloomberg/Palantir High-Density Terminal Styling
 st.markdown(
     """
     <style>
-    /* Dark Theme Accent & Global Font Setup */
+    /* Global Terminal Background and Monospace Font Setup */
     .stApp {
-        background-color: #0f172a;
-        color: #f1f5f9;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #000000;
+        color: #d1d5db;
+        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
     }
     
-    /* Clean Professional Headers - No Gradients */
+    /* Terminal Header Font Styling */
     h1, h2, h3, h4, h5, h6 {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #f8fafc;
-        font-weight: 600;
-        letter-spacing: -0.025em;
+        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
+        color: #ff9900 !important; /* Bloomberg Amber */
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-bottom: 1px solid #222222;
+        padding-bottom: 6px;
     }
     
-    /* Sleek Clean Metric Cards */
+    /* High-Density Terminal Metric Cards */
     div[data-testid="metric-container"] {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 12px 16px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        background-color: #080c10;
+        border: 1px solid #333333;
+        border-radius: 0px; /* Hard borders */
+        padding: 8px 12px;
+        box-shadow: none;
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-        font-size: 24px;
-        font-weight: 700;
-        color: #38bdf8;
+        font-size: 22px;
+        font-weight: bold;
+        color: #00ff66; /* Neon Green */
+        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
-        font-size: 13px;
-        color: #94a3b8;
-        font-weight: 500;
+        font-size: 11px;
+        color: #888888;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     
-    /* Sidebar Layout Tuning */
+    /* Customize Amber Metrics for warning variables (Denial, Leakage) */
+    div[data-testid="metric-container"]:nth-of-type(2) [data-testid="stMetricValue"],
+    div[data-testid="metric-container"]:nth-of-type(5) [data-testid="stMetricValue"] {
+        color: #ff9900 !important;
+    }
+    
+    /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #020617;
-        border-right: 1px solid #1e293b;
+        background-color: #05070a;
+        border-right: 1px solid #222222;
     }
     
-    /* Minimalist Tab Navigation Styling */
+    /* Tab Navigation - Terminal Style */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
-        border-bottom: 2px solid #1e293b;
+        gap: 2px;
+        border-bottom: 1px solid #333333;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: transparent;
-        border: none;
+        background-color: #080c10;
+        border: 1px solid #222222;
         border-radius: 0px;
-        padding: 12px 20px;
-        color: #64748b;
-        font-weight: 500;
-        font-size: 14px;
-        transition: color 0.15s ease-in-out;
+        padding: 8px 14px;
+        color: #888888;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        text-transform: uppercase;
     }
     
     .stTabs [aria-selected="true"] {
-        border-bottom: 2px solid #38bdf8 !important;
-        color: #38bdf8 !important;
-        background-color: transparent !important;
+        background-color: #111b24 !important;
+        border-color: #ff9900 !important;
+        color: #ff9900 !important;
+    }
+    
+    /* Clean Terminal Table Styling */
+    .stDataFrame {
+        border: 1px solid #222222;
     }
     </style>
     """,
@@ -137,10 +153,10 @@ def load_data():
 df, encounters, ai_logs, audit_logs, claims = load_data()
 
 # ----------------- SIDEBAR FILTERS & ACTIONS -----------------
-st.sidebar.title("Pulse RCM Analytics")
-st.sidebar.caption("Billing Telemetry Data Engine")
+st.sidebar.markdown("<h3 style='color: #ff9900; margin-top: 0px;'>PULSE OPERATIONAL MODULE</h3>", unsafe_allow_html=True)
+st.sidebar.markdown("<div style='color: #888888; font-size: 11px; margin-bottom: 20px;'>TELEMETRY MONITOR V4.1</div>", unsafe_allow_html=True)
 
-st.sidebar.subheader("Global Filters")
+st.sidebar.subheader("FILTERS")
 # Specialty Filter
 specialties = ["All Specialties"] + sorted(df["specialty"].dropna().unique().tolist())
 selected_specialty = st.sidebar.selectbox("Medical Specialty", specialties)
@@ -170,31 +186,31 @@ if selected_payer != "All Payers":
 if selected_model != "All Models":
     filtered_df = filtered_df[filtered_df["ai_model_version"] == selected_model]
 
-st.sidebar.subheader("System Control")
-if st.sidebar.button("Run Live Claim Simulation Step"):
+st.sidebar.subheader("COMMANDS")
+if st.sidebar.button("Run Simulation Step"):
     try:
         from src.api.main import get_db, run_simulation_step
         db_gen = next(get_db())
         res = run_simulation_step(db_gen)
-        st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
+        st.sidebar.success(f"Encounter: {res['encounter_id']}")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
         st.experimental_rerun()
     except Exception as e:
-        st.sidebar.error(f"Simulation execution failed: {e}")
+        st.sidebar.error(f"Simulation failed: {e}")
 
 # ----------------- MAIN LAYOUT & TABS -----------------
-st.title("Revenue Cycle Telemetry Control Center")
-st.markdown("Automated medical coding analysis, compliance calibration, and denial resolution intelligence.")
+st.markdown("<h2 style='color: #ff9900; margin-bottom: 0px;'>PULSE RCM ANALYTICS SYSTEM</h2>", unsafe_allow_html=True)
+st.markdown("<div style='color: #888888; font-size: 12px; margin-bottom: 24px;'>SECURE TELEMETRY LINK ESTABLISHED</div>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "Executive Overview",
-    "AI Confidence Calibration",
-    "Denial Analysis",
-    "Revenue Leakage Explorer",
-    "Auditor Performance",
-    "A/B Workflow Evaluation",
-    "Metrics Reference"
+    "EXECUTIVE OVERVIEW",
+    "AI CONFIDENCE CALIBRATION",
+    "DENIAL ANALYSIS",
+    "REVENUE LEAKAGE EXPLORER",
+    "AUDITOR PERFORMANCE",
+    "A/B WORKFLOW EVALUATION",
+    "METRICS REFERENCE"
 ])
 
 # ----------------- TAB 1: EXECUTIVE OVERVIEW -----------------
@@ -239,13 +255,13 @@ with tab1:
         y=["charges", "payments"], 
         labels={"value": "Amount ($)", "visit_date": "Date", "variable": "Metric"},
         title="Charge Capture vs Payments Received Over Time",
-        color_discrete_sequence=["#6366f1", "#0ea5e9"],
+        color_discrete_sequence=["#00ff66", "#ff9900"],
         template="plotly_dark"
     )
     fig_timeline.update_layout(
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_family="-apple-system, BlinkMacSystemFont, sans-serif"
+        plot_bgcolor="#000000",
+        paper_bgcolor="#000000",
+        font_family="Consolas, monospace"
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
 
@@ -263,10 +279,10 @@ with tab2:
             nbins=20,
             title="Distribution of AI Confidence Scores",
             labels={"confidence_score": "Confidence Score", "count": "Frequency"},
-            color_discrete_sequence=["#6366f1"],
+            color_discrete_sequence=["#ff9900"],
             template="plotly_dark"
         )
-        fig_conf.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig_conf.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
         st.plotly_chart(fig_conf, use_container_width=True)
         
     with col_cal_right:
@@ -288,10 +304,10 @@ with tab2:
             trendline="ols",
             title="Calibration Curve (Estimated Confidence vs Ground-Truth Accuracy)",
             labels={"midpoint": "Confidence Level", "accuracy": "Measured Accuracy"},
-            color_discrete_sequence=["#0ea5e9"],
+            color_discrete_sequence=["#00ff66"],
             template="plotly_dark"
         )
-        fig_calib.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig_calib.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
         st.plotly_chart(fig_calib, use_container_width=True)
 
 # ----------------- TAB 3: DENIAL ANALYSIS -----------------
@@ -316,10 +332,10 @@ with tab3:
                 orientation="h",
                 title="Denial Reasons Frequency",
                 labels={"count": "Frequency", "denial_reason": "Payer Denial Code"},
-                color_discrete_sequence=["#ef4444"],
+                color_discrete_sequence=["#ff3333"],
                 template="plotly_dark"
             )
-            fig_reasons.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            fig_reasons.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
             st.plotly_chart(fig_reasons, use_container_width=True)
             
         with col_den_2:
@@ -329,10 +345,10 @@ with tab3:
                 values="denials",
                 names="payer_id_claim",
                 title="Denial Distribution by Payer Cohort",
-                color_discrete_sequence=px.colors.qualitative.G10,
+                color_discrete_sequence=px.colors.sequential.Gray_r,
                 template="plotly_dark"
             )
-            fig_payer.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            fig_payer.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
             st.plotly_chart(fig_payer, use_container_width=True)
 
 # ----------------- TAB 4: REVENUE LEAKAGE EXPLORER -----------------
@@ -355,10 +371,10 @@ with tab4:
             y="leakage",
             title="Revenue Leakage ($) by Specialty Area",
             labels={"leakage": "Unrecovered Amount ($)", "specialty": "Clinical Division"},
-            color_discrete_sequence=["#f97316"],
+            color_discrete_sequence=["#ff9900"],
             template="plotly_dark"
         )
-        fig_spec_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig_spec_leak.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
         st.plotly_chart(fig_spec_leak, use_container_width=True)
         
     with col_leak_2:
@@ -374,10 +390,10 @@ with tab4:
             y="leakage",
             title="Revenue Leakage ($) by Underwriter/Payer",
             labels={"leakage": "Unrecovered Amount ($)", "payer_id_enc": "Insurance Payer"},
-            color_discrete_sequence=["#ec4899"],
+            color_discrete_sequence=["#888888"],
             template="plotly_dark"
         )
-        fig_payer_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig_payer_leak.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
         st.plotly_chart(fig_payer_leak, use_container_width=True)
 
 # ----------------- TAB 5: AUDITOR PERFORMANCE -----------------
@@ -407,10 +423,10 @@ with tab5:
                 y="avg_duration",
                 title="Mean Processing Duration (Seconds)",
                 labels={"avg_duration": "Duration (s)", "auditor_id": "Auditor ID"},
-                color_discrete_sequence=["#10b981"],
+                color_discrete_sequence=["#00ff66"],
                 template="plotly_dark"
             )
-            fig_dur.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            fig_dur.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
             st.plotly_chart(fig_dur, use_container_width=True)
             
         with col_aud_2:
