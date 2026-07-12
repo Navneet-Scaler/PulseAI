@@ -345,7 +345,7 @@ with tab3:
                 values="denials",
                 names="payer_id_claim",
                 title="Denial Distribution by Payer Cohort",
-                color_discrete_sequence=px.colors.sequential.Gray_r,
+                color_discrete_sequence=["#111827", "#1f2937", "#374151", "#4b5563"],
                 template="plotly_dark"
             )
             fig_payer.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
