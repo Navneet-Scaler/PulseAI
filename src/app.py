@@ -133,6 +133,11 @@ st.markdown(
 
 DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlite:///", "")
 
+# Verify database exists and has data, if not backfill it
+if not os.path.exists(DB_PATH):
+    from src.utils.backfill import run_backfill
+    run_backfill(num_days=30, events_per_day=85)
+
 def load_data():
     conn = sqlite3.connect(DB_PATH)
     
