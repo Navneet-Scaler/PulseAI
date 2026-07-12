@@ -695,7 +695,17 @@ with tab6:
     st.subheader("Statistical Cohort Comparison")
     st.markdown("Significance testing of Control Group (v1.8 Coder) vs Treatment Group (v2.1 Coder).")
     
-    ab_stats = filtered_df.groupby("ai_model_version").agg(
+    # Bypass model filter for A/B testing tab so we can always compare control vs treatment
+    ab_filtered_df = df[
+        (df["visit_date"].dt.date >= selected_dates[0]) & 
+        (df["visit_date"].dt.date <= selected_dates[1])
+    ]
+    if selected_specialty != "All Specialties":
+        ab_filtered_df = ab_filtered_df[ab_filtered_df["specialty"] == selected_specialty]
+    if selected_payer != "All Payers":
+        ab_filtered_df = ab_filtered_df[ab_filtered_df["payer_id_enc"] == selected_payer]
+        
+    ab_stats = ab_filtered_df.groupby("ai_model_version").agg(
         total_claims=("encounter_id", "count"),
         auto_billed=("action_taken", lambda x: (x == "auto_billed").sum()),
         accurate_predictions=("is_accurate", "sum"),
