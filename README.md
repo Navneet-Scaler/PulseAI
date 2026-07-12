@@ -29,6 +29,14 @@ The platform simulates a real-world healthcare billing pipeline containing four 
 
 ---
 
+## Power BI Dashboard Integration
+
+For advanced corporate reporting and offline analytics, the platform's simulated datasets are exported to `exported_assets/` as flat CSV files. You can load these files directly into Power BI Desktop to build custom enterprise dashboards.
+
+* **Power BI Web Link**: [View Published Interactive Power BI Report](https://app.powerbi.com/view?r=YOUR_SECURE_PUBLIC_VIEW_LINK_HERE)
+
+---
+
 ## Directory Structure
 
 ```
