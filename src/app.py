@@ -4,76 +4,84 @@ import json
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as ob
+import plotly.graph_objects as go
 import streamlit as st
 from datetime import datetime, date
 
-# Set page config with dark/premium theme styling
+# Set page config with professional enterprise theme styling
 st.set_page_config(
-    page_title="Pulse AI - RCM Intelligence Platform",
-    page_icon="⚡",
+    page_title="Pulse AI RCM Platform",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Premium Custom CSS styling
+# Professional Enterprise Custom CSS styling
 st.markdown(
     """
     <style>
-    /* Gradient Background and Dark theme accents */
+    /* Dark Theme Accent & Global Font Setup */
     .stApp {
-        background: linear-gradient(135deg, #0e1117 0%, #161a24 100%);
-        color: #e2e8f0;
+        background-color: #0f172a;
+        color: #f1f5f9;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     
-    /* Premium Headers */
-    h1, h2, h3 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-weight: 700;
-        background: linear-gradient(to right, #38bdf8, #818cf8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    /* Clean Professional Headers - No Gradients */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #f8fafc;
+        font-weight: 600;
+        letter-spacing: -0.025em;
     }
     
-    /* Styled Metric Cards */
+    /* Sleek Clean Metric Cards */
     div[data-testid="metric-container"] {
-        background: rgba(30, 41, 59, 0.45);
-        border: 1px solid rgba(129, 140, 248, 0.2);
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(10px);
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     }
     
-    div[data-testid="metric-container"]:hover {
-        transform: translateY(-2px);
-        border-color: rgba(129, 140, 248, 0.5);
+    div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+        font-size: 24px;
+        font-weight: 700;
+        color: #38bdf8;
     }
     
-    /* Custom Sidebar styling */
+    div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    
+    /* Sidebar Layout Tuning */
     section[data-testid="stSidebar"] {
-        background-color: #0b0e14;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        background-color: #020617;
+        border-right: 1px solid #1e293b;
     }
     
-    /* Custom tab headers */
+    /* Minimalist Tab Navigation Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 4px;
+        border-bottom: 2px solid #1e293b;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: rgba(30, 41, 59, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px 8px 0px 0px;
-        padding: 8px 16px;
-        color: #94a3b8;
+        background-color: transparent;
+        border: none;
+        border-radius: 0px;
+        padding: 12px 20px;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 14px;
+        transition: color 0.15s ease-in-out;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: rgba(129, 140, 248, 0.15) !important;
-        border-color: rgba(129, 140, 248, 0.4) !important;
+        border-bottom: 2px solid #38bdf8 !important;
         color: #38bdf8 !important;
+        background-color: transparent !important;
     }
     </style>
     """,
@@ -84,7 +92,7 @@ DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlit
 
 # Verify database exists and has data, if not backfill it
 if not os.path.exists(DB_PATH):
-    st.info("Database not found. Generating premium synthetic RCM data...")
+    st.info("Database instance not found. Re-initializing telemetry dataset...")
     from src.utils.backfill import run_backfill
     run_backfill(num_days=30, events_per_day=20)
 
@@ -110,7 +118,6 @@ def load_data():
     merged["reviewed_at"] = pd.to_datetime(merged["reviewed_at"], format='mixed', errors='coerce')
     
     # Calculate accuracy
-    # Evaluate list equality on JSON strings
     def check_accuracy(row):
         try:
             correct_icd = set(json.loads(row["correct_icd10"]))
@@ -130,76 +137,67 @@ def load_data():
 df, encounters, ai_logs, audit_logs, claims = load_data()
 
 # ----------------- SIDEBAR FILTERS & ACTIONS -----------------
-st.sidebar.image("https://img.icons8.com/nolan/96/artificial-intelligence.png", width=60)
-st.sidebar.title("Pulse AI Platform")
-st.sidebar.caption("Revenue Cycle Telemetry")
+st.sidebar.title("Pulse RCM Analytics")
+st.sidebar.caption("Billing Telemetry Data Engine")
 
-st.sidebar.subheader("Filters")
+st.sidebar.subheader("Global Filters")
 # Specialty Filter
-specialties = ["All"] + sorted(df["specialty"].dropna().unique().tolist())
+specialties = ["All Specialties"] + sorted(df["specialty"].dropna().unique().tolist())
 selected_specialty = st.sidebar.selectbox("Medical Specialty", specialties)
 
 # Payer Filter
-payers = ["All"] + sorted(df["payer_id_enc"].dropna().unique().tolist())
+payers = ["All Payers"] + sorted(df["payer_id_enc"].dropna().unique().tolist())
 selected_payer = st.sidebar.selectbox("Insurance Payer", payers)
 
 # Model Filter
-models = ["All"] + sorted(df["ai_model_version"].dropna().unique().tolist())
+models = ["All Models"] + sorted(df["ai_model_version"].dropna().unique().tolist())
 selected_model = st.sidebar.selectbox("AI Model Version", models)
 
 # Date Filter
 min_date = df["visit_date"].min().date()
 max_date = df["visit_date"].max().date()
-selected_dates = st.sidebar.slider("Date Range", min_value=min_date, max_value=max_date, value=(min_date, max_date))
+selected_dates = st.sidebar.slider("Date Range Selection", min_value=min_date, max_value=max_date, value=(min_date, max_date))
 
 # Filter DataFrame
 filtered_df = df[
     (df["visit_date"].dt.date >= selected_dates[0]) & 
     (df["visit_date"].dt.date <= selected_dates[1])
 ]
-if selected_specialty != "All":
+if selected_specialty != "All Specialties":
     filtered_df = filtered_df[filtered_df["specialty"] == selected_specialty]
-if selected_payer != "All":
+if selected_payer != "All Payers":
     filtered_df = filtered_df[filtered_df["payer_id_enc"] == selected_payer]
-if selected_model != "All":
+if selected_model != "All Models":
     filtered_df = filtered_df[filtered_df["ai_model_version"] == selected_model]
 
-st.sidebar.subheader("Actions")
-if st.sidebar.button("Trigger Live Simulation Run"):
-    import requests
+st.sidebar.subheader("System Control")
+if st.sidebar.button("Run Live Claim Simulation Step"):
     try:
-        # Run simulation step directly
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        from src.api.main import get_db
-        # We can simulate inline to avoid network dependencies
-        from fastapi import FastAPI
-        # Call simulation logic locally to update DB safely
-        from src.api.main import run_simulation_step
+        from src.api.main import get_db, run_simulation_step
         db_gen = next(get_db())
         res = run_simulation_step(db_gen)
-        st.sidebar.success(f"Success! Created Encounter: {res['encounter_id']}")
+        st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
         st.experimental_rerun()
     except Exception as e:
-        st.sidebar.error(f"Error triggering simulation: {e}")
+        st.sidebar.error(f"Simulation execution failed: {e}")
 
 # ----------------- MAIN LAYOUT & TABS -----------------
-st.title("⚡ Pulse AI - Autonomous RCM Command Center")
-st.markdown("Real-time telemetry, confidence calibration, denial intelligence, and A/B billing analysis.")
+st.title("Revenue Cycle Telemetry Control Center")
+st.markdown("Automated medical coding analysis, compliance calibration, and denial resolution intelligence.")
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "📈 Executive RCM",
-    "🎯 AI Calibration",
-    "❌ Denial Analytics",
-    "💸 Revenue Leakage",
-    "🧑‍💻 Auditor Workload",
-    "🔬 Experiment Results",
-    "📘 KPI Definitions"
+    "Executive Overview",
+    "AI Confidence Calibration",
+    "Denial Analysis",
+    "Revenue Leakage Explorer",
+    "Auditor Performance",
+    "A/B Workflow Evaluation",
+    "Metrics Reference"
 ])
 
-# ----------------- TAB 1: EXECUTIVE RCM -----------------
+# ----------------- TAB 1: EXECUTIVE OVERVIEW -----------------
 with tab1:
     st.subheader("Key Performance Indicators")
     
@@ -222,14 +220,14 @@ with tab1:
     clean_claim_rate = (clean_claims / total_enc * 100) if total_enc > 0 else 0
     
     col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Automation Rate", f"{automation_rate:.1f}%", help="Claims routed directly to billing without auditor review")
-    col2.metric("Payer Denial Rate", f"{denial_rate:.1f}%", help="Percentage of total claims denied by payer")
-    col3.metric("Clean Claim Rate", f"{clean_claim_rate:.1f}%", help="Claims paid successfully without manual audit intervention")
+    col1.metric("Automation Rate", f"{automation_rate:.1f}%")
+    col2.metric("Payer Denial Rate", f"{denial_rate:.1f}%")
+    col3.metric("Clean Claim Rate", f"{clean_claim_rate:.1f}%")
     col4.metric("Total Payments", f"${total_paid:,.2f}")
-    col5.metric("Revenue Leakage", f"${leakage:,.2f}", f"{leakage_pct:.1f}% Leakage", delta_color="inverse")
+    col5.metric("Revenue Leakage", f"${leakage:,.2f}", f"{leakage_pct:.1f}% leakage", delta_color="inverse")
     
     # Billing timelines
-    st.markdown("### Financial Trends")
+    st.markdown("### Financial Performance Trends")
     timeline_df = filtered_df.groupby(filtered_df["visit_date"].dt.date).agg(
         charges=("charge_amount", "sum"),
         payments=("paid_amount", "sum")
@@ -239,41 +237,45 @@ with tab1:
         timeline_df, 
         x="visit_date", 
         y=["charges", "payments"], 
-        labels={"value": "Amount ($)", "visit_date": "Date"},
+        labels={"value": "Amount ($)", "visit_date": "Date", "variable": "Metric"},
         title="Charge Capture vs Payments Received Over Time",
-        color_discrete_sequence=["#818cf8", "#38bdf8"],
+        color_discrete_sequence=["#6366f1", "#0ea5e9"],
         template="plotly_dark"
+    )
+    fig_timeline.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_family="-apple-system, BlinkMacSystemFont, sans-serif"
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
 
 # ----------------- TAB 2: AI CONFIDENCE CALIBRATION -----------------
 with tab2:
-    st.subheader("Model Confidence & Calibration")
-    st.markdown("Evaluate how the AI model's self-assessed confidence correlates with its actual ground-truth coding accuracy.")
+    st.subheader("Model Calibration Analysis")
+    st.markdown("Correlation between the AI model's internal confidence estimation and ground-truth coding accuracy.")
     
     col_cal_left, col_cal_right = st.columns(2)
     
     with col_cal_left:
-        # Confidence score distribution
         fig_conf = px.histogram(
             filtered_df, 
             x="confidence_score", 
             nbins=20,
             title="Distribution of AI Confidence Scores",
-            color_discrete_sequence=["#818cf8"],
+            labels={"confidence_score": "Confidence Score", "count": "Frequency"},
+            color_discrete_sequence=["#6366f1"],
             template="plotly_dark"
         )
+        fig_conf.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_conf, use_container_width=True)
         
     with col_cal_right:
-        # Bin confidence and compute accuracy
         filtered_df["conf_bin"] = pd.cut(filtered_df["confidence_score"], bins=np.arange(0, 1.05, 0.1))
         calib = filtered_df.groupby("conf_bin").agg(
             total=("encounter_id", "count"),
             accurate=("is_accurate", "sum")
         ).reset_index()
         
-        # Calculate midpoints for display
         calib["midpoint"] = calib["conf_bin"].apply(lambda x: x.mid)
         calib["accuracy"] = calib["accurate"] / calib["total"]
         calib = calib.dropna()
@@ -284,20 +286,21 @@ with tab2:
             y="accuracy", 
             size="total",
             trendline="ols",
-            title="Calibration Curve (Confidence vs Ground-Truth Accuracy)",
-            labels={"midpoint": "Confidence Level", "accuracy": "Coding Accuracy"},
-            color_discrete_sequence=["#38bdf8"],
+            title="Calibration Curve (Estimated Confidence vs Ground-Truth Accuracy)",
+            labels={"midpoint": "Confidence Level", "accuracy": "Measured Accuracy"},
+            color_discrete_sequence=["#0ea5e9"],
             template="plotly_dark"
         )
+        fig_calib.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_calib, use_container_width=True)
 
-# ----------------- TAB 3: DENIAL REASON BREAKDOWN -----------------
+# ----------------- TAB 3: DENIAL ANALYSIS -----------------
 with tab3:
-    st.subheader("Denial Intelligence & Categorization")
+    st.subheader("Denial Intelligence Summary")
     
     denied_df = filtered_df[filtered_df["status"] == "denied"]
     if len(denied_df) == 0:
-        st.warning("No payer denials match the current filter selection.")
+        st.warning("No payer denials match the selected filter configuration.")
     else:
         col_den_1, col_den_2 = st.columns(2)
         with col_den_1:
@@ -311,10 +314,12 @@ with tab3:
                 y="denial_reason", 
                 x="count", 
                 orientation="h",
-                title="Denial Reasons Count",
-                color_discrete_sequence=["#f87171"],
+                title="Denial Reasons Frequency",
+                labels={"count": "Frequency", "denial_reason": "Payer Denial Code"},
+                color_discrete_sequence=["#ef4444"],
                 template="plotly_dark"
             )
+            fig_reasons.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_reasons, use_container_width=True)
             
         with col_den_2:
@@ -323,16 +328,17 @@ with tab3:
                 payer_denials,
                 values="denials",
                 names="payer_id_claim",
-                title="Denial Distribution by Payer",
-                color_discrete_sequence=px.colors.sequential.Plasma,
+                title="Denial Distribution by Payer Cohort",
+                color_discrete_sequence=px.colors.qualitative.G10,
                 template="plotly_dark"
             )
+            fig_payer.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_payer, use_container_width=True)
 
 # ----------------- TAB 4: REVENUE LEAKAGE EXPLORER -----------------
 with tab4:
-    st.subheader("Revenue Leakage Analysis")
-    st.markdown("Identify areas where clinical charges are not fully recovered due to denials and coding errors.")
+    st.subheader("Revenue Leakage Attribution")
+    st.markdown("Isolation of billing anomalies resulting in lost or deferred payouts.")
     
     col_leak_1, col_leak_2 = st.columns(2)
     
@@ -342,16 +348,17 @@ with tab4:
             payments=("paid_amount", "sum")
         ).reset_index()
         specialty_leak["leakage"] = specialty_leak["charges"] - specialty_leak["payments"]
-        specialty_leak["leakage_pct"] = (specialty_leak["leakage"] / specialty_leak["charges"] * 100)
         
         fig_spec_leak = px.bar(
             specialty_leak.sort_values(by="leakage", ascending=False),
             x="specialty",
             y="leakage",
-            title="Revenue Leakage ($) by Medical Specialty",
-            color_discrete_sequence=["#fb923c"],
+            title="Revenue Leakage ($) by Specialty Area",
+            labels={"leakage": "Unrecovered Amount ($)", "specialty": "Clinical Division"},
+            color_discrete_sequence=["#f97316"],
             template="plotly_dark"
         )
+        fig_spec_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_spec_leak, use_container_width=True)
         
     with col_leak_2:
@@ -365,21 +372,23 @@ with tab4:
             payer_leak.sort_values(by="leakage", ascending=False),
             x="payer_id_enc",
             y="leakage",
-            title="Revenue Leakage ($) by Insurance Payer",
-            color_discrete_sequence=["#f472b6"],
+            title="Revenue Leakage ($) by Underwriter/Payer",
+            labels={"leakage": "Unrecovered Amount ($)", "payer_id_enc": "Insurance Payer"},
+            color_discrete_sequence=["#ec4899"],
             template="plotly_dark"
         )
+        fig_payer_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_payer_leak, use_container_width=True)
 
-# ----------------- TAB 5: AUDITOR WORKLOAD -----------------
+# ----------------- TAB 5: AUDITOR PERFORMANCE -----------------
 with tab5:
-    st.subheader("Auditor Productivity & Queue Latency")
-    st.markdown("Human-in-the-loop audit metrics for claims routed due to low AI confidence (<0.75).")
+    st.subheader("Human-in-the-Loop Productivity Analytics")
+    st.markdown("Verification metrics for claims routed to human audit due to sub-threshold AI confidence (<0.75).")
     
     audited_df = filtered_df[filtered_df["action_taken"] == "routed_to_audit"]
     
     if len(audited_df) == 0:
-        st.warning("No audited claims found under the active filter configuration.")
+        st.warning("No audited claims located under the current configuration.")
     else:
         auditor_metrics = audited_df.groupby("auditor_id").agg(
             total_reviews=("encounter_id", "count"),
@@ -396,14 +405,16 @@ with tab5:
                 auditor_metrics.sort_values(by="avg_duration"),
                 x="auditor_id",
                 y="avg_duration",
-                title="Average Audit Review Time (Seconds)",
-                color_discrete_sequence=["#34d399"],
+                title="Mean Processing Duration (Seconds)",
+                labels={"avg_duration": "Duration (s)", "auditor_id": "Auditor ID"},
+                color_discrete_sequence=["#10b981"],
                 template="plotly_dark"
             )
+            fig_dur.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_dur, use_container_width=True)
             
         with col_aud_2:
-            st.markdown("### Auditor Performance Summary")
+            st.markdown("### Auditor Performance Ledger")
             st.dataframe(
                 auditor_metrics.style.format({
                     "avg_duration": "{:.1f}s",
@@ -412,12 +423,11 @@ with tab5:
                 use_container_width=True
             )
 
-# ----------------- TAB 6: EXPERIMENT RESULTS -----------------
+# ----------------- TAB 6: A/B WORKFLOW EVALUATION -----------------
 with tab6:
-    st.subheader("A/B Billing Workflow Experimentation")
-    st.markdown("Analysis of the active A/B test: **Control Group (v1.8 Coder)** vs **Treatment Group (v2.1 Coder)**.")
+    st.subheader("Statistical Cohort Comparison")
+    st.markdown("Significance testing of Control Group (v1.8 Coder) vs Treatment Group (v2.1 Coder).")
     
-    # Calculate group-level statistics
     ab_stats = filtered_df.groupby("ai_model_version").agg(
         total_claims=("encounter_id", "count"),
         auto_billed=("action_taken", lambda x: (x == "auto_billed").sum()),
@@ -444,11 +454,10 @@ with tab6:
         use_container_width=True
     )
     
-    st.markdown("### Statistical Significance Checks")
+    st.markdown("### Two-Proportion Z-Test Significance Checks")
     
     from statsmodels.stats.proportion import proportions_ztest
     
-    # Extract cohorts
     group_names = ab_stats["ai_model_version"].tolist()
     if len(group_names) >= 2:
         n_a, n_b = ab_stats["total_claims"].iloc[0], ab_stats["total_claims"].iloc[1]
@@ -466,7 +475,7 @@ with tab6:
             st.metric(
                 label="Payer Denial Rate p-value",
                 value=f"{p_den:.4f}",
-                delta="Statistically Significant" if p_den < 0.05 else "Not Significant",
+                delta="Significant Change" if p_den < 0.05 else "Insignificant Variance",
                 delta_color="normal" if p_den < 0.05 else "off"
             )
             st.info(f"Comparing denial rates: **{ab_stats['denial_rate'].iloc[0]:.2f}%** vs **{ab_stats['denial_rate'].iloc[1]:.2f}%**.")
@@ -475,24 +484,24 @@ with tab6:
             st.metric(
                 label="AI Automation Rate p-value",
                 value=f"{p_auto:.4f}",
-                delta="Statistically Significant" if p_auto < 0.05 else "Not Significant",
+                delta="Significant Change" if p_auto < 0.05 else "Insignificant Variance",
                 delta_color="normal" if p_auto < 0.05 else "off"
             )
             st.info(f"Comparing automation rates: **{ab_stats['automation_rate'].iloc[0]:.2f}%** vs **{ab_stats['automation_rate'].iloc[1]:.2f}%**.")
     else:
-        st.warning("Not enough data to calculate A/B test proportions. Please backfill or select 'All' models.")
+        st.warning("Insufficient data available to compute proportional significance. Please populate or check filters.")
 
-# ----------------- TAB 7: KPI DEFINITIONS -----------------
+# ----------------- TAB 7: METRICS REFERENCE -----------------
 with tab7:
-    st.subheader("RCM Metric Reference Guide")
+    st.subheader("Standard RCM Terminology Reference Guide")
     
     st.markdown(
         """
-        - **AI Automation Rate**: Percentage of overall patient visits processed, coded, and submitted autonomously without human auditor intervention.
-        - **Clean Claim Rate**: The proportion of medical billing claims submitted and paid in full by insurance companies on the first attempt without corrections or prior denials.
-        - **Payer Denial Rate**: The percentage of claims rejected or unpaid by payers relative to total claims submitted.
-        - **Revenue Leakage**: Unrecovered cash due to insurance claim denials, lower contractual allowed rates, and coding errors.
-        - **AI Accuracy**: Ratio of AI-predicted ICD-10 and CPT codes matching the clinician's ground-truth codes exactly.
-        - **Auditor Correction Rate**: Percentage of claims reviewed by human auditors where the AI-predicted codes were altered.
+        * **Automation Rate**: The proportion of medical visits processed and submitted to insurance underwriters without requiring human coder or auditor adjustment.
+        * **Clean Claim Rate**: The proportion of submitted insurance billing files successfully cleared and resolved on initial transmission, requiring no secondary correction or denial mitigation.
+        * **Denial Rate**: Total rejected or unpaid medical claims divided by the total number of claims submitted within a specified timeframe.
+        * **Revenue Leakage**: Total financial shortfall resulting from insurer underpayments, coding errors, or resolved payment rejections.
+        * **AI Diagnostic Accuracy**: Percentage of AI-assigned diagnosis (ICD-10) and procedure (CPT) codes that exactly match correct clinician clinical codes.
+        * **Auditor Correction Rate**: Ratio of claims where human auditing modifications were required to correct AI coding predictions.
         """
     )
