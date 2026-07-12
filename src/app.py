@@ -8,96 +8,117 @@ import plotly.graph_objects as go
 import streamlit as st
 from datetime import datetime, date
 
-# Set page config with professional high-density terminal theme styling
+# Set page config with professional light corporate theme styling
 st.set_page_config(
-    page_title="PULSE RCM OPERATIONAL TERMINAL",
+    page_title="Pulse AI RCM Intelligence Platform",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Bloomberg/Palantir High-Density Terminal Styling
+# Custom Light Grey Corporate Theme Styling
 st.markdown(
     """
     <style>
-    /* Global Terminal Background and Monospace Font Setup */
+    /* Global Background and Typography Setup */
     .stApp {
-        background-color: #000000;
-        color: #d1d5db;
-        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
+        background-color: #f8fafc; /* Light Grey/Slate */
+        color: #1e293b; /* Dark Slate Text */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Terminal Header Font Styling */
+    /* Premium Corporate Headers */
     h1, h2, h3, h4, h5, h6 {
-        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
-        color: #ff9900 !important; /* Bloomberg Amber */
-        font-weight: bold;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        border-bottom: 1px solid #222222;
-        padding-bottom: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #0f172a;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+        margin-top: 20px;
+        margin-bottom: 12px;
     }
     
-    /* High-Density Terminal Metric Cards */
+    /* Clean Premium Metric Cards */
     div[data-testid="metric-container"] {
-        background-color: #080c10;
-        border: 1px solid #333333;
-        border-radius: 0px; /* Hard borders */
-        padding: 8px 12px;
-        box-shadow: none;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 14px 18px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-        font-size: 22px;
-        font-weight: bold;
-        color: #00ff66; /* Neon Green */
-        font-family: "Consolas", "Courier New", "Roboto Mono", monospace;
+        font-size: 26px;
+        font-weight: 700;
+        color: #2563eb; /* Corporate Blue */
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
-        font-size: 11px;
-        color: #888888;
+        font-size: 12px;
+        color: #64748b;
         text-transform: uppercase;
+        font-weight: 600;
         letter-spacing: 0.05em;
     }
     
-    /* Customize Amber Metrics for warning variables (Denial, Leakage) */
-    div[data-testid="metric-container"]:nth-of-type(2) [data-testid="stMetricValue"],
-    div[data-testid="metric-container"]:nth-of-type(5) [data-testid="stMetricValue"] {
-        color: #ff9900 !important;
-    }
-    
-    /* Sidebar Styling */
+    /* Sidebar Styling - Dark Slate for Premium Contrast */
     section[data-testid="stSidebar"] {
-        background-color: #05070a;
-        border-right: 1px solid #222222;
+        background-color: #0f172a;
+        border-right: 1px solid #e2e8f0;
     }
     
-    /* Tab Navigation - Terminal Style */
+    section[data-testid="stSidebar"] h3, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
+        color: #f8fafc !important;
+    }
+    
+    section[data-testid="stSidebar"] label {
+        color: #cbd5e1 !important;
+    }
+    
+    /* Minimalist Tab Navigation */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
-        border-bottom: 1px solid #333333;
+        gap: 6px;
+        border-bottom: 2px solid #e2e8f0;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: #080c10;
-        border: 1px solid #222222;
-        border-radius: 0px;
-        padding: 8px 14px;
-        color: #888888;
-        font-family: "Consolas", "Courier New", monospace;
-        font-size: 12px;
-        text-transform: uppercase;
+        background-color: transparent;
+        border: none;
+        padding: 10px 18px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 13px;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: #111b24 !important;
-        border-color: #ff9900 !important;
-        color: #ff9900 !important;
+        border-bottom: 3px solid #2563eb !important;
+        color: #2563eb !important;
+        background-color: transparent !important;
     }
     
-    /* Clean Terminal Table Styling */
-    .stDataFrame {
-        border: 1px solid #222222;
+    /* Business Inference Block Styling */
+    .inference-block {
+        background-color: #f1f5f9;
+        border-left: 4px solid #2563eb;
+        padding: 16px;
+        border-radius: 0 6px 6px 0;
+        margin-top: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .inference-title {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+    
+    .inference-text {
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.5;
     }
     </style>
     """,
@@ -105,12 +126,6 @@ st.markdown(
 )
 
 DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlite:///", "")
-
-# Verify database exists and has data, if not backfill it
-if not os.path.exists(DB_PATH):
-    st.info("Database instance not found. Re-initializing telemetry dataset...")
-    from src.utils.backfill import run_backfill
-    run_backfill(num_days=30, events_per_day=20)
 
 def load_data():
     conn = sqlite3.connect(DB_PATH)
@@ -153,10 +168,8 @@ def load_data():
 df, encounters, ai_logs, audit_logs, claims = load_data()
 
 # ----------------- SIDEBAR FILTERS & ACTIONS -----------------
-st.sidebar.markdown("<h3 style='color: #ff9900; margin-top: 0px;'>PULSE OPERATIONAL MODULE</h3>", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='color: #888888; font-size: 11px; margin-bottom: 20px;'>TELEMETRY MONITOR V4.1</div>", unsafe_allow_html=True)
+st.sidebar.subheader("PULSE RCM FILTER SUITE")
 
-st.sidebar.subheader("FILTERS")
 # Specialty Filter
 specialties = ["All Specialties"] + sorted(df["specialty"].dropna().unique().tolist())
 selected_specialty = st.sidebar.selectbox("Medical Specialty", specialties)
@@ -186,32 +199,46 @@ if selected_payer != "All Payers":
 if selected_model != "All Models":
     filtered_df = filtered_df[filtered_df["ai_model_version"] == selected_model]
 
-st.sidebar.subheader("COMMANDS")
+st.sidebar.subheader("SIMULATOR MODULE")
 if st.sidebar.button("Run Simulation Step"):
     try:
         from src.api.main import get_db, run_simulation_step
         db_gen = next(get_db())
         res = run_simulation_step(db_gen)
-        st.sidebar.success(f"Encounter: {res['encounter_id']}")
+        st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
         st.experimental_rerun()
     except Exception as e:
-        st.sidebar.error(f"Simulation failed: {e}")
+        st.sidebar.error(f"Simulation execution failed: {e}")
 
 # ----------------- MAIN LAYOUT & TABS -----------------
-st.markdown("<h2 style='color: #ff9900; margin-bottom: 0px;'>PULSE RCM ANALYTICS SYSTEM</h2>", unsafe_allow_html=True)
-st.markdown("<div style='color: #888888; font-size: 12px; margin-bottom: 24px;'>SECURE TELEMETRY LINK ESTABLISHED</div>", unsafe_allow_html=True)
+st.title("Pulse Revenue Cycle Management Analytics Platform")
+st.markdown("Real-time telemetry and validation center for automated healthcare billing systems.")
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "EXECUTIVE OVERVIEW",
-    "AI CONFIDENCE CALIBRATION",
-    "DENIAL ANALYSIS",
-    "REVENUE LEAKAGE EXPLORER",
-    "AUDITOR PERFORMANCE",
-    "A/B WORKFLOW EVALUATION",
-    "METRICS REFERENCE"
+    "Executive Overview",
+    "AI Confidence Calibration",
+    "Denial Analysis",
+    "Revenue Leakage Explorer",
+    "Auditor Performance",
+    "A/B Workflow Evaluation",
+    "Metrics Reference"
 ])
+
+# Helper function to generate inference section
+def render_inference(title, text):
+    st.markdown(
+        f"""
+        <div class="inference-block">
+            <div class="inference-title">🔍 Layman Explanation & Business Inference</div>
+            <div class="inference-text">
+                <strong>{title}:</strong> {text}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ----------------- TAB 1: EXECUTIVE OVERVIEW -----------------
 with tab1:
@@ -255,15 +282,23 @@ with tab1:
         y=["charges", "payments"], 
         labels={"value": "Amount ($)", "visit_date": "Date", "variable": "Metric"},
         title="Charge Capture vs Payments Received Over Time",
-        color_discrete_sequence=["#00ff66", "#ff9900"],
-        template="plotly_dark"
+        color_discrete_sequence=["#2563eb", "#06b6d4"],
+        template="plotly_white"
     )
     fig_timeline.update_layout(
-        plot_bgcolor="#000000",
-        paper_bgcolor="#000000",
-        font_family="Consolas, monospace"
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_family="-apple-system, BlinkMacSystemFont, sans-serif"
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
+    
+    render_inference(
+        "Executive Dashboard Health Summary",
+        f"We are observing a Clean Claim Rate of {clean_claim_rate:.1f}% alongside a Payer Denial Rate of {denial_rate:.1f}%. "
+        f"Out of ${total_charges:,.2f} captured in medical charges, the system has successfully recovered ${total_paid:,.2f}, leaving "
+        f"${leakage:,.2f} ({leakage_pct:.1f}%) in unrecovered revenue leakage. A healthy revenue cycle should target a denial rate below 10% "
+        f"and a clean claim rate above 80%. Operational adjustments are recommended to address payer friction and refine the AI's coding threshold."
+    )
 
 # ----------------- TAB 2: AI CONFIDENCE CALIBRATION -----------------
 with tab2:
@@ -279,10 +314,10 @@ with tab2:
             nbins=20,
             title="Distribution of AI Confidence Scores",
             labels={"confidence_score": "Confidence Score", "count": "Frequency"},
-            color_discrete_sequence=["#ff9900"],
-            template="plotly_dark"
+            color_discrete_sequence=["#2563eb"],
+            template="plotly_white"
         )
-        fig_conf.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+        fig_conf.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_conf, use_container_width=True)
         
     with col_cal_right:
@@ -304,11 +339,20 @@ with tab2:
             trendline="ols",
             title="Calibration Curve (Estimated Confidence vs Ground-Truth Accuracy)",
             labels={"midpoint": "Confidence Level", "accuracy": "Measured Accuracy"},
-            color_discrete_sequence=["#00ff66"],
-            template="plotly_dark"
+            color_discrete_sequence=["#06b6d4"],
+            template="plotly_white"
         )
-        fig_calib.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+        fig_calib.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_calib, use_container_width=True)
+        
+    render_inference(
+        "Confidence and Calibration Insights",
+        "The calibration curve plots how accurate the AI system is at different levels of estimated confidence. "
+        "A perfectly calibrated model will align with the diagonal line (e.g. 80% confidence yields 80% accuracy). "
+        "The OLS trendline shows whether the model is overconfident or underconfident. Our current calibration indicates "
+        "that claims with confidence above 0.75 are highly accurate, justifying their automatic submission without audit. "
+        "Conversely, claims falling below 0.75 carry significant error rates, validating the human-in-the-loop routing threshold."
+    )
 
 # ----------------- TAB 3: DENIAL ANALYSIS -----------------
 with tab3:
@@ -332,10 +376,10 @@ with tab3:
                 orientation="h",
                 title="Denial Reasons Frequency",
                 labels={"count": "Frequency", "denial_reason": "Payer Denial Code"},
-                color_discrete_sequence=["#ff3333"],
-                template="plotly_dark"
+                color_discrete_sequence=["#ef4444"],
+                template="plotly_white"
             )
-            fig_reasons.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+            fig_reasons.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_reasons, use_container_width=True)
             
         with col_den_2:
@@ -345,11 +389,19 @@ with tab3:
                 values="denials",
                 names="payer_id_claim",
                 title="Denial Distribution by Payer Cohort",
-                color_discrete_sequence=["#111827", "#1f2937", "#374151", "#4b5563"],
-                template="plotly_dark"
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                template="plotly_white"
             )
-            fig_payer.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+            fig_payer.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_payer, use_container_width=True)
+            
+    render_inference(
+        "Insurance Payer Denial Analysis",
+        "This breakdown isolates the specific friction points preventing claim reimbursement. "
+        "High volumes of 'Incorrect Coding Mismatch' rejections suggest that coding errors are bypassing our validation checks. "
+        "In contrast, denials like 'Prior Authorization Required' reflect administrative gaps rather than coding mistakes. "
+        "Focus training or system updates on addressing the top-ranking denial reason to achieve the fastest drop in denials."
+    )
 
 # ----------------- TAB 4: REVENUE LEAKAGE EXPLORER -----------------
 with tab4:
@@ -371,10 +423,10 @@ with tab4:
             y="leakage",
             title="Revenue Leakage ($) by Specialty Area",
             labels={"leakage": "Unrecovered Amount ($)", "specialty": "Clinical Division"},
-            color_discrete_sequence=["#ff9900"],
-            template="plotly_dark"
+            color_discrete_sequence=["#f97316"],
+            template="plotly_white"
         )
-        fig_spec_leak.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+        fig_spec_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_spec_leak, use_container_width=True)
         
     with col_leak_2:
@@ -390,11 +442,19 @@ with tab4:
             y="leakage",
             title="Revenue Leakage ($) by Underwriter/Payer",
             labels={"leakage": "Unrecovered Amount ($)", "payer_id_enc": "Insurance Payer"},
-            color_discrete_sequence=["#888888"],
-            template="plotly_dark"
+            color_discrete_sequence=["#ec4899"],
+            template="plotly_white"
         )
-        fig_payer_leak.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+        fig_payer_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_payer_leak, use_container_width=True)
+        
+    render_inference(
+        "Leakage and Underwriter Payout Gaps",
+        "Revenue leakage represents the difference between the dollar amount billed to insurance and the amount received. "
+        "By dividing this metric by clinical specialty and insurance underwriter, we can isolate underperforming areas. "
+        "Specialties with high leakage require documentation audits, while specific payers showing disproportionate "
+        "leakage may indicate strict contract terms or aggressive claims scrubbing systems."
+    )
 
 # ----------------- TAB 5: AUDITOR PERFORMANCE -----------------
 with tab5:
@@ -423,10 +483,10 @@ with tab5:
                 y="avg_duration",
                 title="Mean Processing Duration (Seconds)",
                 labels={"avg_duration": "Duration (s)", "auditor_id": "Auditor ID"},
-                color_discrete_sequence=["#00ff66"],
-                template="plotly_dark"
+                color_discrete_sequence=["#10b981"],
+                template="plotly_white"
             )
-            fig_dur.update_layout(plot_bgcolor="#000000", paper_bgcolor="#000000")
+            fig_dur.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_dur, use_container_width=True)
             
         with col_aud_2:
@@ -438,6 +498,13 @@ with tab5:
                 }),
                 use_container_width=True
             )
+            
+    render_inference(
+        "Auditor Productivity & Workload Metrics",
+        "Human auditors provide crucial verification of complex claims. This page tracks review speed (mean duration) "
+        "and correction frequency. High correction rates imply that the AI is struggle-prone in specific code families, "
+        "while wide differences in review times among auditors suggest training opportunities or unequal file difficulty."
+    )
 
 # ----------------- TAB 6: A/B WORKFLOW EVALUATION -----------------
 with tab6:
@@ -506,6 +573,14 @@ with tab6:
             st.info(f"Comparing automation rates: **{ab_stats['automation_rate'].iloc[0]:.2f}%** vs **{ab_stats['automation_rate'].iloc[1]:.2f}%**.")
     else:
         st.warning("Insufficient data available to compute proportional significance. Please populate or check filters.")
+        
+    render_inference(
+        "A/B Cohort Statistical Interpretations",
+        "A/B testing evaluates if changing from Model v1.8 (Control) to Model v2.1 (Treatment) creates a statistically "
+        "meaningful benefit. The p-values determine if the difference in denial rates and automation rates is due to random "
+        "chance or model performance. A p-value below 0.05 is statistically significant, confirming that the new model version "
+        "provides real, measurable improvement in the billing pipeline."
+    )
 
 # ----------------- TAB 7: METRICS REFERENCE -----------------
 with tab7:

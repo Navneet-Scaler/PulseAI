@@ -12,7 +12,7 @@ from src.core.denial_simulator import DenialSimulator
 
 DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///pulse_ai.db").replace("sqlite:///", "")
 
-def run_backfill(num_days: int = 30, events_per_day: int = 25):
+def run_backfill(num_days: int = 30, events_per_day: int = 85):
     print(f"Starting backfill for the last {num_days} days. Total target: {num_days * events_per_day} encounters.")
     
     conn = sqlite3.connect(DB_PATH)
