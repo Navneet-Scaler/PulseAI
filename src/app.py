@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Dynamic pythonpath resolution for cloud deployment runtimes
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 import sqlite3
 import json
 import pandas as pd
@@ -144,6 +151,8 @@ if os.path.exists(DB_PATH):
         count = cursor.fetchone()[0]
         if count > 0:
             db_needs_init = False
+
+            
         conn.close()
     except Exception:
         db_needs_init = True
