@@ -132,7 +132,7 @@ st.markdown(
 )
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(PROJECT_ROOT, 'pulse_ai.db')}").replace("sqlite:///", "")
+DB_PATH = os.path.join(PROJECT_ROOT, "pulse_ai.db")
 
 # Verify database exists and has data, if not backfill it
 if not os.path.exists(DB_PATH):

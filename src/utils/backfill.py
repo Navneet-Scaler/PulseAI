@@ -11,7 +11,7 @@ from src.core.auditor import AuditorSimulator
 from src.core.denial_simulator import DenialSimulator
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DB_PATH = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(PROJECT_ROOT, 'pulse_ai.db')}").replace("sqlite:///", "")
+DB_PATH = os.path.join(PROJECT_ROOT, "pulse_ai.db")
 
 def run_backfill(num_days: int = 30, events_per_day: int = 85):
     print(f"Starting backfill for the last {num_days} days. Total target: {num_days * events_per_day} encounters.")

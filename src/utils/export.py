@@ -3,7 +3,7 @@ import sqlite3
 import pandas as pd
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DB_PATH = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(PROJECT_ROOT, 'pulse_ai.db')}").replace("sqlite:///", "")
+DB_PATH = os.path.join(PROJECT_ROOT, "pulse_ai.db")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../../exported_assets")
 
 def export_tables():
