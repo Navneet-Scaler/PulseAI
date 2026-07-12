@@ -104,10 +104,10 @@ def load_data():
     merged = merged.merge(claims_df, on="encounter_id", how="left", suffixes=('_enc', '_claim'))
     
     # Convert dates/times
-    merged["visit_date"] = pd.to_datetime(merged["visit_date"])
-    merged["processed_at"] = pd.to_datetime(merged["processed_at"])
-    merged["submitted_at"] = pd.to_datetime(merged["submitted_at"])
-    merged["reviewed_at"] = pd.to_datetime(merged["reviewed_at"])
+    merged["visit_date"] = pd.to_datetime(merged["visit_date"], format='mixed', errors='coerce')
+    merged["processed_at"] = pd.to_datetime(merged["processed_at"], format='mixed', errors='coerce')
+    merged["submitted_at"] = pd.to_datetime(merged["submitted_at"], format='mixed', errors='coerce')
+    merged["reviewed_at"] = pd.to_datetime(merged["reviewed_at"], format='mixed', errors='coerce')
     
     # Calculate accuracy
     # Evaluate list equality on JSON strings
