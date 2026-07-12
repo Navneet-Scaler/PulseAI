@@ -21,8 +21,8 @@ st.markdown(
     <style>
     /* Global Background and Typography Setup */
     .stApp {
-        background-color: #f8fafc; /* Light Grey/Slate */
-        color: #1e293b; /* Dark Slate Text */
+        background-color: #f8fafc;
+        color: #1e293b;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
@@ -50,7 +50,7 @@ st.markdown(
     div[data-testid="metric-container"] [data-testid="stMetricValue"] {
         font-size: 26px;
         font-weight: 700;
-        color: #2563eb; /* Corporate Blue */
+        color: #2563eb;
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
@@ -302,8 +302,85 @@ with tab1:
 
 # ----------------- TAB 2: AI CONFIDENCE CALIBRATION -----------------
 with tab2:
-    st.subheader("Model Calibration Analysis")
-    st.markdown("Correlation between the AI model's internal confidence estimation and ground-truth coding accuracy.")
+    st.subheader("Model Calibration Analysis & Threshold Optimizer")
+    
+    st.markdown("### 🎛️ Dynamic Confidence Threshold Optimization Simulation")
+    st.write("Adjust the slider below to simulate how altering the routing threshold dynamically optimizes net revenue cycle payouts and auditor workloads.")
+    
+    # Add threshold tuning slider
+    tuned_threshold = st.slider("Simulated Confidence Routing Threshold", min_value=0.50, max_value=0.95, value=0.75, step=0.01)
+    
+    # Perform dynamic calculations based on the selected slider threshold
+    simulated_rows = []
+    
+    # We will simulate routing for the active cohort
+    # If confidence_score < threshold -> routes to manual audit (100% correct, baseline denial rates)
+    # If confidence_score >= threshold -> auto-bills directly
+    # If auto-billed and has a coding mismatch -> 90% chance of being denied by the payer
+    # If auto-billed and no coding mismatch -> baseline denial rates
+    for idx, row in filtered_df.iterrows():
+        conf = row["confidence_score"]
+        is_accurate = row["is_accurate"]
+        charge = row["charge_amount"]
+        payer = row["payer_id_enc"]
+        
+        # Determine baseline denial rate
+        denial_prob = 0.15 if payer == "Payer_Medicare" else 0.22
+        
+        sim_routed = conf < tuned_threshold
+        
+        if sim_routed:
+            # Audit corrects the code -> bills correctly
+            sim_status = "denied" if np.random.RandomState(idx).random() < denial_prob else "paid"
+        else:
+            # Bypassed audit -> bills with AI codes
+            if not is_accurate:
+                # Bypassed audit with code error! 90% payer denial chance
+                sim_status = "denied" if np.random.RandomState(idx).random() < 0.90 else "paid"
+            else:
+                # Bypassed audit with correct codes -> baseline denial rate
+                sim_status = "denied" if np.random.RandomState(idx).random() < denial_prob else "paid"
+                
+        # Calculate payment amount
+        if sim_status == "paid":
+            allowed_rate = 0.72  # average allowed rate
+            sim_paid = round(charge * allowed_rate, 2)
+        else:
+            sim_paid = 0.0
+            
+        sim_rows = {
+            "encounter_id": row["encounter_id"],
+            "charge_amount": charge,
+            "sim_routed": sim_routed,
+            "sim_status": sim_status,
+            "sim_paid": sim_paid
+        }
+        simulated_rows.append(sim_rows)
+        
+    sim_df = pd.DataFrame(simulated_rows)
+    
+    # Compute metrics
+    sim_total_enc = len(sim_df)
+    sim_audited = sim_df["sim_routed"].sum()
+    sim_auto = sim_total_enc - sim_audited
+    sim_automation_rate = (sim_auto / sim_total_enc * 100) if sim_total_enc > 0 else 0
+    
+    sim_denied = (sim_df["sim_status"] == "denied").sum()
+    sim_denial_rate = (sim_denied / sim_total_enc * 100) if sim_total_enc > 0 else 0
+    
+    sim_payments = sim_df["sim_paid"].sum()
+    
+    # Assume $5 auditor cost per audit
+    auditor_cost = sim_audited * 5.00
+    net_payout = sim_payments - auditor_cost
+    
+    col_sim_1, col_sim_2, col_sim_3, col_sim_4 = st.columns(4)
+    col_sim_1.metric("Simulated Automation Rate", f"{sim_automation_rate:.1f}%")
+    col_sim_2.metric("Simulated Payer Denial Rate", f"{sim_denial_rate:.1f}%")
+    col_sim_3.metric("Total Auditor Overhead ($5/claim)", f"${auditor_cost:,.2f}")
+    col_sim_4.metric("Net Financial Payout (Net Revenue)", f"${net_payout:,.2f}")
+    
+    st.markdown("---")
     
     col_cal_left, col_cal_right = st.columns(2)
     
@@ -356,7 +433,7 @@ with tab2:
 
 # ----------------- TAB 3: DENIAL ANALYSIS -----------------
 with tab3:
-    st.subheader("Denial Intelligence Summary")
+    st.subheader("Denial Intelligence Summary & Heatmaps")
     
     denied_df = filtered_df[filtered_df["status"] == "denied"]
     if len(denied_df) == 0:
@@ -394,6 +471,37 @@ with tab3:
             )
             fig_payer.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_payer, use_container_width=True)
+            
+        # Payer Rules & Denial Heatmap
+        st.markdown("### 🗺️ Payer Denial Reason Heatmap Correlation")
+        heatmap_data = denied_df.groupby(["payer_id_claim", "denial_reason"]).size().unstack(fill_value=0)
+        
+        fig_heat = px.imshow(
+            heatmap_data,
+            labels=dict(x="Denial Reason", y="Insurance Payer", color="Denials count"),
+            x=heatmap_data.columns,
+            y=heatmap_data.index,
+            color_continuous_scale="Reds",
+            title="Correlation Heatmap: Payers vs Denial Categories",
+            template="plotly_white"
+        )
+        fig_heat.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig_heat, use_container_width=True)
+        
+        # High-Impact Code Mismatch Matrix
+        st.markdown("### ⚠️ High-Impact AI Code Mismatches (Coding Leakage Hotspots)")
+        
+        # Group by correct vs predicted codes
+        mismatch_df = filtered_df[(filtered_df["is_accurate"] == False) & (filtered_df["action_taken"] == "auto_billed")]
+        if len(mismatch_df) > 0:
+            mismatch_summary = mismatch_df.groupby(["specialty", "correct_icd10", "predicted_icd10"]).agg(
+                claims_count=("encounter_id", "count"),
+                total_loss=("charge_amount", "sum")
+            ).reset_index().sort_values(by="total_loss", ascending=False).head(5)
+            
+            st.dataframe(mismatch_summary, use_container_width=True)
+        else:
+            st.info("No AI coding mismatches detected in auto-billed claims.")
             
     render_inference(
         "Insurance Payer Denial Analysis",
