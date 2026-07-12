@@ -213,7 +213,7 @@ if st.sidebar.button("Run Simulation Step"):
         st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.sidebar.error(f"Simulation execution failed: {e}")
 
