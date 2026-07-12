@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RCMTelemetryEvent",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["encounter_registered", "ai_coding_processed", "auditor_reviewed", "claim_submitted", "payer_responded"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "encounter_id": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "patient_id": { "type": "string" },
+            "specialty": { "type": "string" },
+            "visit_date": { "type": "string", "format": "date" },
+            "symptoms": { "type": "string" },
+            "clinical_notes": { "type": "string" }
+          },
+          "required": ["patient_id", "specialty", "visit_date", "clinical_notes"]
+        },
+        {
+          "properties": {
+            "ai_model_version": { "type": "string" },
+            "predicted_icd10": { "type": "array", "items": { "type": "string" } },
+            "predicted_cpt": { "type": "array", "items": { "type": "string" } },
+            "confidence_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "action_taken": { "type": "string", "enum": ["auto_billed", "routed_to_audit"] }
+          },
+          "required": ["ai_model_version", "predicted_icd10", "predicted_cpt", "confidence_score", "action_taken"]
+        },
+        {
+          "properties": {
+            "auditor_id": { "type": "string" },
+            "decision": { "type": "string", "enum": ["agreed", "corrected"] },
+            "final_icd10": { "type": "array", "items": { "type": "string" } },
+            "final_cpt": { "type": "array", "items": { "type": "string" } },
+            "audit_duration_seconds": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["auditor_id", "decision", "final_icd10", "final_cpt", "audit_duration_seconds"]
+        },
+        {
+          "properties": {
+            "payer_id": { "type": "string" },
+            "charge_amount": { "type": "number", "minimum": 0.0 }
+          },
+          "required": ["payer_id", "charge_amount"]
+        },
+        {
+          "properties": {
+            "payer_id": { "type": "string" },
+            "status": { "type": "string", "enum": ["paid", "denied"] },
+            "denial_reason": { "type": ["string", "null"] },
+            "allowed_amount": { "type": "number", "minimum": 0.0 },
+            "paid_amount": { "type": "number", "minimum": 0.0 }
+          },
+          "required": ["payer_id", "status", "allowed_amount", "paid_amount"]
+        }
+      ]
+    }
+  },
+  "required": ["event_id", "event_type", "timestamp", "encounter_id", "payload"]
+}
