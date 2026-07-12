@@ -206,9 +206,10 @@ if selected_model != "All Models":
 st.sidebar.subheader("SIMULATOR MODULE")
 if st.sidebar.button("Run Simulation Step"):
     try:
-        from src.api.main import get_db, run_simulation_step
-        db_gen = next(get_db())
-        res = run_simulation_step(db_gen)
+        from src.api.main import run_simulation_step
+        conn = sqlite3.connect(DB_PATH)
+        res = run_simulation_step(conn)
+        conn.close()
         st.sidebar.success(f"Encounter Created: {res['encounter_id']}")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
