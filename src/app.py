@@ -38,7 +38,7 @@ st.markdown(
         margin-bottom: 14px;
     }
     
-    /* Clean Premium Metric Cards */
+    /* Clean Premium Metric Cards with larger size allowance */
     div[data-testid="metric-container"] {
         background-color: #111827; /* Dark Grey/Slate */
         border: 1px solid #1f2937;
@@ -48,9 +48,11 @@ st.markdown(
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-        font-size: 28px;
+        font-size: 20px !important; /* Slightly smaller for multi-digit data visibility */
         font-weight: 700;
-        color: #60a5fa; /* Crisp Sky Blue */
+        color: #60a5fa !important; /* Crisp Sky Blue */
+        white-space: nowrap !important;
+        overflow: visible !important;
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
@@ -214,7 +216,7 @@ if st.sidebar.button("Run Simulation Step"):
         st.toast(f"Claim simulation complete: {res['encounter_id']}", icon="✅")
         # Reload dataset
         df, encounters, ai_logs, audit_logs, claims = load_data()
-        st.rerun()
+        st.experimental_rerun()
     except Exception as e:
         st.sidebar.error(f"Simulation execution failed: {e}")
 
@@ -268,12 +270,22 @@ with tab1:
     clean_claims = len(filtered_df[(filtered_df["status"] == "paid") & (filtered_df["action_taken"] == "auto_billed")])
     clean_claim_rate = (clean_claims / total_enc * 100) if total_enc > 0 else 0
     
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Automation Rate", f"{automation_rate:.1f}%")
-    col2.metric("Payer Denial Rate", f"{denial_rate:.1f}%")
-    col3.metric("Clean Claim Rate", f"{clean_claim_rate:.1f}%")
-    col4.metric("Total Payments", f"${total_paid:,.2f}")
-    col5.metric("Revenue Leakage", f"${leakage:,.2f}", f"{leakage_pct:.1f}% leakage", delta_color="inverse")
+    # Days in Accounts Receivable (AR Days)
+    # Formula: (Gross AR Outstanding / Gross Charges) * 30 days
+    ar_days = (leakage / total_charges * 30) if total_charges > 0 else 0
+    
+    # Display in a 3x2 grid to prevent any value wrapping or clipping
+    m_row1_col1, m_row1_col2, m_row1_col3 = st.columns(3)
+    m_row1_col1.metric("AI Automation Rate", f"{automation_rate:.1f}%")
+    m_row1_col2.metric("Payer Denial Rate", f"{denial_rate:.1f}%")
+    m_row1_col3.metric("Clean Claim Rate (CCR)", f"{clean_claim_rate:.1f}%")
+    
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+    
+    m_row2_col1, m_row2_col2, m_row2_col3 = st.columns(3)
+    m_row2_col1.metric("Gross Billed Charges", f"${total_charges:,.2f}")
+    m_row2_col2.metric("Total Payments Received", f"${total_paid:,.2f}")
+    m_row2_col3.metric("Days Outstanding in AR (AR Days)", f"{ar_days:.1f} Days")
     
     # Billing timelines
     st.markdown("### Financial Performance Trends")
@@ -282,12 +294,12 @@ with tab1:
         payments=("paid_amount", "sum")
     ).reset_index()
     
-    fig_timeline = px.line(
+    fig_timeline = px.area(
         timeline_df, 
         x="visit_date", 
         y=["charges", "payments"], 
         labels={"value": "Amount ($)", "visit_date": "Date", "variable": "Metric"},
-        title="Charge Capture vs Payments Received Over Time",
+        title="Gross Charges Captured vs Net Payments Received (Daily)",
         color_discrete_sequence=["#3b82f6", "#10b981"],
         template="plotly_dark"
     )
@@ -298,12 +310,47 @@ with tab1:
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
     
+    # AR Aging Buckets
+    st.markdown("### Accounts Receivable (AR) Aging Buckets")
+    
+    # Calculate claim age based on visit date relative to current time
+    today = pd.to_datetime(date.today())
+    filtered_df["claim_age"] = (today - filtered_df["visit_date"]).dt.days
+    
+    # Group into buckets for outstanding/unrecovered revenue
+    unpaid_claims = filtered_df[filtered_df["paid_amount"] == 0.0]
+    
+    def get_aging_bucket(age):
+        if age <= 10:
+            return "0-10 Days (Current)"
+        elif age <= 20:
+            return "11-20 Days (Deferred)"
+        else:
+            return "21+ Days (Delinquent)"
+            
+    unpaid_claims["aging_bucket"] = unpaid_claims["claim_age"].apply(get_aging_bucket)
+    
+    aging_data = unpaid_claims.groupby(["specialty", "aging_bucket"])["charge_amount"].sum().reset_index()
+    
+    fig_aging = px.bar(
+        aging_data,
+        x="specialty",
+        y="charge_amount",
+        color="aging_bucket",
+        title="Unrecovered Accounts Receivable by Aging Bucket & specialty",
+        labels={"charge_amount": "Outstanding Amount ($)", "specialty": "Clinical Division", "aging_bucket": "AR Age Bucket"},
+        color_discrete_sequence=px.colors.qualitative.Slate,
+        template="plotly_dark"
+    )
+    fig_aging.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+    st.plotly_chart(fig_aging, use_container_width=True)
+    
     render_inference(
         "Executive Dashboard Health Summary",
         f"We are observing a Clean Claim Rate of {clean_claim_rate:.1f}% alongside a Payer Denial Rate of {denial_rate:.1f}%. "
-        f"Out of ${total_charges:,.2f} captured in medical charges, the system has successfully recovered ${total_paid:,.2f}, leaving "
-        f"${leakage:,.2f} ({leakage_pct:.1f}%) in unrecovered revenue leakage. A healthy revenue cycle should target a denial rate below 10% "
-        f"and a clean claim rate above 80%. Operational adjustments are recommended to address payer friction and refine the AI's coding threshold."
+        f"The AR Days metric stands at {ar_days:.1f} days, indicating the average cycle length before billing assets are fully recovered. "
+        f"Looking at our AR Aging Buckets, specialties with high volumes of '21+ Days (Delinquent)' claims represent immediate cash flow risks. "
+        f"Strategic adjustments in coding auditing must focus on resolving these delinquent claims to release locked working capital."
     )
 
 # ----------------- TAB 2: AI CONFIDENCE CALIBRATION -----------------
@@ -370,7 +417,7 @@ with tab2:
     col_sim_1, col_sim_2, col_sim_3, col_sim_4 = st.columns(4)
     col_sim_1.metric("Simulated Automation Rate", f"{sim_automation_rate:.1f}%")
     col_sim_2.metric("Simulated Payer Denial Rate", f"{sim_denial_rate:.1f}%")
-    col_sim_3.metric("Total Auditor Overhead ($5/claim)", f"${auditor_cost:,.2f}")
+    col_sim_3.metric("Total Auditor Cost ($5/claim)", f"${auditor_cost:,.2f}")
     col_sim_4.metric("Net Financial Payout (Net Revenue)", f"${net_payout:,.2f}")
     
     st.markdown("---")
@@ -505,8 +552,7 @@ with tab3:
 
 # ----------------- TAB 4: REVENUE LEAKAGE EXPLORER -----------------
 with tab4:
-    st.subheader("Revenue Leakage Attribution")
-    st.markdown("Isolation of billing anomalies resulting in lost or deferred payouts.")
+    st.subheader("Revenue Leakage Attribution & Underpayment Audit")
     
     col_leak_1, col_leak_2 = st.columns(2)
     
@@ -548,24 +594,62 @@ with tab4:
         fig_payer_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_payer_leak, use_container_width=True)
         
+    # Advanced Underpayment Audit
+    st.markdown("### Contractual Underpayment Analysis (Expected vs Actual Payments)")
+    underpaid_claims = filtered_df[(filtered_df["status"] == "paid") & (filtered_df["paid_amount"] < filtered_df["allowed_amount"])]
+    if len(underpaid_claims) > 0:
+        underpaid_summary = underpaid_claims.groupby(["payer_id_claim", "specialty"]).agg(
+            underpaid_count=("encounter_id", "count"),
+            expected_allowed_avg=("allowed_amount", "mean"),
+            actual_paid_avg=("paid_amount", "mean"),
+            total_underpaid_leakage=("allowed_amount", lambda x: (x - underpaid_claims.loc[x.index, "paid_amount"]).sum())
+        ).reset_index().sort_values(by="total_underpaid_leakage", ascending=False).head(5)
+        
+        st.dataframe(
+            underpaid_summary.style.format({
+                "expected_allowed_avg": "${:,.2f}",
+                "actual_paid_avg": "${:,.2f}",
+                "total_underpaid_leakage": "${:,.2f}"
+            }),
+            use_container_width=True
+        )
+    else:
+        st.info("No underpaid contract claims located in the dataset.")
+        
     render_inference(
         "Leakage and Underwriter Payout Gaps",
         "Revenue leakage represents the difference between the dollar amount billed to insurance and the amount received. "
         "By dividing this metric by clinical specialty and insurance underwriter, we can isolate underperforming areas. "
-        "Specialties with high leakage require documentation audits, while specific payers showing disproportionate "
-        "leakage may indicate strict contract terms or aggressive claims scrubbing systems."
+        "The contractual underpayment analysis identifies cases where insurers paid less than the contracted allowed rate, "
+        "which requires recovery review from contract compliance officers."
     )
 
 # ----------------- TAB 5: AUDITOR PERFORMANCE -----------------
 with tab5:
-    st.subheader("Human-in-the-Loop Productivity Analytics")
-    st.markdown("Verification metrics for claims routed to human audit due to sub-threshold AI confidence (<0.75).")
+    st.subheader("Human-in-the-Loop Productivity & ROI Analytics")
     
     audited_df = filtered_df[filtered_df["action_taken"] == "routed_to_audit"]
     
     if len(audited_df) == 0:
         st.warning("No audited claims located under the current configuration.")
     else:
+        # Calculate Human Auditor ROI
+        # Revenue recovered: Charges corrected * 72% allowed rate
+        corrected_df = audited_df[audited_df["decision"] == "corrected"]
+        rev_recovered = corrected_df["charge_amount"].sum() * 0.72
+        
+        total_audits = len(audited_df)
+        labor_cost = total_audits * 5.00  # $5 labor overhead per review
+        net_roi = rev_recovered - labor_cost
+        roi_percentage = (net_roi / labor_cost * 100) if labor_cost > 0 else 0
+        
+        col_roi_1, col_roi_2, col_roi_3 = st.columns(3)
+        col_roi_1.metric("Audited Claims Volume", f"{total_audits} Claims")
+        col_roi_2.metric("Auditor Prevented Leakage (Recovered)", f"${rev_recovered:,.2f}")
+        col_roi_3.metric("Net Auditor Return on Investment (ROI)", f"{roi_percentage:.1f}% ROI")
+        
+        st.markdown("---")
+        
         auditor_metrics = audited_df.groupby("auditor_id").agg(
             total_reviews=("encounter_id", "count"),
             avg_duration=("audit_duration_seconds", "mean"),
@@ -694,5 +778,6 @@ with tab7:
         * **Revenue Leakage**: Total financial shortfall resulting from insurer underpayments, coding errors, or resolved payment rejections.
         * **AI Diagnostic Accuracy**: Percentage of AI-assigned diagnosis (ICD-10) and procedure (CPT) codes that exactly match correct clinician clinical codes.
         * **Auditor Correction Rate**: Ratio of claims where human auditing modifications were required to correct AI coding predictions.
+        * **Days in Accounts Receivable (AR Days)**: Average number of days it takes for a clinic to receive full payment from insurance underwriters after patient visits occur.
         """
     )
