@@ -8,117 +8,121 @@ import plotly.graph_objects as go
 import streamlit as st
 from datetime import datetime, date
 
-# Set page config with professional light corporate theme styling
+# Set page config with professional high-contrast dark theme styling
 st.set_page_config(
     page_title="Pulse AI RCM Intelligence Platform",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Light Grey Corporate Theme Styling
+# Custom High-Contrast Dark Slate Corporate Styling
 st.markdown(
     """
     <style>
     /* Global Background and Typography Setup */
     .stApp {
-        background-color: #f8fafc;
-        color: #1e293b;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #0b0f19; /* Deep Dark Slate */
+        color: #f3f4f6; /* High Contrast Off-White */
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
     }
     
-    /* Premium Corporate Headers */
+    /* Clean Premium Headers */
     h1, h2, h3, h4, h5, h6 {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #0f172a;
-        font-weight: 700;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+        color: #ffffff;
+        font-weight: 600;
         letter-spacing: -0.02em;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 8px;
-        margin-top: 20px;
-        margin-bottom: 12px;
+        border-bottom: 1px solid #1f2937;
+        padding-bottom: 10px;
+        margin-top: 24px;
+        margin-bottom: 14px;
     }
     
     /* Clean Premium Metric Cards */
     div[data-testid="metric-container"] {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        background-color: #111827; /* Dark Grey/Slate */
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-        font-size: 26px;
+        font-size: 28px;
         font-weight: 700;
-        color: #2563eb;
+        color: #60a5fa; /* Crisp Sky Blue */
     }
     
     div[data-testid="metric-container"] [data-testid="stMetricLabel"] {
-        font-size: 12px;
-        color: #64748b;
+        font-size: 11px;
+        color: #9ca3af;
         text-transform: uppercase;
         font-weight: 600;
         letter-spacing: 0.05em;
     }
     
-    /* Sidebar Styling - Dark Slate for Premium Contrast */
+    /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #0f172a;
-        border-right: 1px solid #e2e8f0;
+        background-color: #030712;
+        border-right: 1px solid #1f2937;
     }
     
     section[data-testid="stSidebar"] h3, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
-        color: #f8fafc !important;
+        color: #ffffff !important;
     }
     
     section[data-testid="stSidebar"] label {
-        color: #cbd5e1 !important;
+        color: #9ca3af !important;
     }
     
     /* Minimalist Tab Navigation */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        border-bottom: 2px solid #e2e8f0;
+        gap: 8px;
+        border-bottom: 1px solid #1f2937;
     }
     
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
         border: none;
-        padding: 10px 18px;
-        color: #64748b;
+        padding: 12px 20px;
+        color: #9ca3af;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 14px;
+        transition: color 0.15s ease-in-out;
     }
     
     .stTabs [aria-selected="true"] {
-        border-bottom: 3px solid #2563eb !important;
-        color: #2563eb !important;
+        border-bottom: 2px solid #3b82f6 !important;
+        color: #3b82f6 !important;
         background-color: transparent !important;
     }
     
     /* Business Inference Block Styling */
     .inference-block {
-        background-color: #f1f5f9;
-        border-left: 4px solid #2563eb;
-        padding: 16px;
-        border-radius: 0 6px 6px 0;
-        margin-top: 24px;
-        margin-bottom: 24px;
+        background-color: #111827;
+        border-left: 4px solid #3b82f6;
+        padding: 18px;
+        border-radius: 0 8px 8px 0;
+        margin-top: 26px;
+        margin-bottom: 26px;
+        border-top: 1px solid #1f2937;
+        border-right: 1px solid #1f2937;
+        border-bottom: 1px solid #1f2937;
     }
     
     .inference-title {
         font-weight: 700;
-        color: #0f172a;
-        font-size: 14px;
+        color: #ffffff;
+        font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
     
     .inference-text {
-        font-size: 13px;
-        color: #334155;
-        line-height: 1.5;
+        font-size: 14px;
+        color: #d1d5db;
+        line-height: 1.6;
     }
     </style>
     """,
@@ -231,7 +235,7 @@ def render_inference(title, text):
     st.markdown(
         f"""
         <div class="inference-block">
-            <div class="inference-title">🔍 Layman Explanation & Business Inference</div>
+            <div class="inference-title">Layman Explanation & Business Inference</div>
             <div class="inference-text">
                 <strong>{title}:</strong> {text}
             </div>
@@ -282,8 +286,8 @@ with tab1:
         y=["charges", "payments"], 
         labels={"value": "Amount ($)", "visit_date": "Date", "variable": "Metric"},
         title="Charge Capture vs Payments Received Over Time",
-        color_discrete_sequence=["#2563eb", "#06b6d4"],
-        template="plotly_white"
+        color_discrete_sequence=["#3b82f6", "#10b981"],
+        template="plotly_dark"
     )
     fig_timeline.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
@@ -304,7 +308,7 @@ with tab1:
 with tab2:
     st.subheader("Model Calibration Analysis & Threshold Optimizer")
     
-    st.markdown("### 🎛️ Dynamic Confidence Threshold Optimization Simulation")
+    st.markdown("### Dynamic Confidence Threshold Optimization Simulation")
     st.write("Adjust the slider below to simulate how altering the routing threshold dynamically optimizes net revenue cycle payouts and auditor workloads.")
     
     # Add threshold tuning slider
@@ -313,37 +317,26 @@ with tab2:
     # Perform dynamic calculations based on the selected slider threshold
     simulated_rows = []
     
-    # We will simulate routing for the active cohort
-    # If confidence_score < threshold -> routes to manual audit (100% correct, baseline denial rates)
-    # If confidence_score >= threshold -> auto-bills directly
-    # If auto-billed and has a coding mismatch -> 90% chance of being denied by the payer
-    # If auto-billed and no coding mismatch -> baseline denial rates
     for idx, row in filtered_df.iterrows():
         conf = row["confidence_score"]
         is_accurate = row["is_accurate"]
         charge = row["charge_amount"]
         payer = row["payer_id_enc"]
         
-        # Determine baseline denial rate
         denial_prob = 0.15 if payer == "Payer_Medicare" else 0.22
         
         sim_routed = conf < tuned_threshold
         
         if sim_routed:
-            # Audit corrects the code -> bills correctly
             sim_status = "denied" if np.random.RandomState(idx).random() < denial_prob else "paid"
         else:
-            # Bypassed audit -> bills with AI codes
             if not is_accurate:
-                # Bypassed audit with code error! 90% payer denial chance
                 sim_status = "denied" if np.random.RandomState(idx).random() < 0.90 else "paid"
             else:
-                # Bypassed audit with correct codes -> baseline denial rate
                 sim_status = "denied" if np.random.RandomState(idx).random() < denial_prob else "paid"
                 
-        # Calculate payment amount
         if sim_status == "paid":
-            allowed_rate = 0.72  # average allowed rate
+            allowed_rate = 0.72
             sim_paid = round(charge * allowed_rate, 2)
         else:
             sim_paid = 0.0
@@ -369,8 +362,6 @@ with tab2:
     sim_denial_rate = (sim_denied / sim_total_enc * 100) if sim_total_enc > 0 else 0
     
     sim_payments = sim_df["sim_paid"].sum()
-    
-    # Assume $5 auditor cost per audit
     auditor_cost = sim_audited * 5.00
     net_payout = sim_payments - auditor_cost
     
@@ -391,8 +382,8 @@ with tab2:
             nbins=20,
             title="Distribution of AI Confidence Scores",
             labels={"confidence_score": "Confidence Score", "count": "Frequency"},
-            color_discrete_sequence=["#2563eb"],
-            template="plotly_white"
+            color_discrete_sequence=["#3b82f6"],
+            template="plotly_dark"
         )
         fig_conf.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_conf, use_container_width=True)
@@ -416,8 +407,8 @@ with tab2:
             trendline="ols",
             title="Calibration Curve (Estimated Confidence vs Ground-Truth Accuracy)",
             labels={"midpoint": "Confidence Level", "accuracy": "Measured Accuracy"},
-            color_discrete_sequence=["#06b6d4"],
-            template="plotly_white"
+            color_discrete_sequence=["#10b981"],
+            template="plotly_dark"
         )
         fig_calib.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_calib, use_container_width=True)
@@ -454,7 +445,7 @@ with tab3:
                 title="Denial Reasons Frequency",
                 labels={"count": "Frequency", "denial_reason": "Payer Denial Code"},
                 color_discrete_sequence=["#ef4444"],
-                template="plotly_white"
+                template="plotly_dark"
             )
             fig_reasons.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_reasons, use_container_width=True)
@@ -466,14 +457,14 @@ with tab3:
                 values="denials",
                 names="payer_id_claim",
                 title="Denial Distribution by Payer Cohort",
-                color_discrete_sequence=px.colors.qualitative.Pastel,
-                template="plotly_white"
+                color_discrete_sequence=px.colors.sequential.Agsunset,
+                template="plotly_dark"
             )
             fig_payer.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_payer, use_container_width=True)
             
         # Payer Rules & Denial Heatmap
-        st.markdown("### 🗺️ Payer Denial Reason Heatmap Correlation")
+        st.markdown("### Payer Denial Reason Heatmap Correlation")
         heatmap_data = denied_df.groupby(["payer_id_claim", "denial_reason"]).size().unstack(fill_value=0)
         
         fig_heat = px.imshow(
@@ -483,15 +474,14 @@ with tab3:
             y=heatmap_data.index,
             color_continuous_scale="Reds",
             title="Correlation Heatmap: Payers vs Denial Categories",
-            template="plotly_white"
+            template="plotly_dark"
         )
         fig_heat.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_heat, use_container_width=True)
         
         # High-Impact Code Mismatch Matrix
-        st.markdown("### ⚠️ High-Impact AI Code Mismatches (Coding Leakage Hotspots)")
+        st.markdown("### High-Impact AI Code Mismatches (Coding Leakage Hotspots)")
         
-        # Group by correct vs predicted codes
         mismatch_df = filtered_df[(filtered_df["is_accurate"] == False) & (filtered_df["action_taken"] == "auto_billed")]
         if len(mismatch_df) > 0:
             mismatch_summary = mismatch_df.groupby(["specialty", "correct_icd10", "predicted_icd10"]).agg(
@@ -531,8 +521,8 @@ with tab4:
             y="leakage",
             title="Revenue Leakage ($) by Specialty Area",
             labels={"leakage": "Unrecovered Amount ($)", "specialty": "Clinical Division"},
-            color_discrete_sequence=["#f97316"],
-            template="plotly_white"
+            color_discrete_sequence=["#f59e0b"],
+            template="plotly_dark"
         )
         fig_spec_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_spec_leak, use_container_width=True)
@@ -551,7 +541,7 @@ with tab4:
             title="Revenue Leakage ($) by Underwriter/Payer",
             labels={"leakage": "Unrecovered Amount ($)", "payer_id_enc": "Insurance Payer"},
             color_discrete_sequence=["#ec4899"],
-            template="plotly_white"
+            template="plotly_dark"
         )
         fig_payer_leak.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_payer_leak, use_container_width=True)
@@ -592,7 +582,7 @@ with tab5:
                 title="Mean Processing Duration (Seconds)",
                 labels={"avg_duration": "Duration (s)", "auditor_id": "Auditor ID"},
                 color_discrete_sequence=["#10b981"],
-                template="plotly_white"
+                template="plotly_dark"
             )
             fig_dur.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_dur, use_container_width=True)
