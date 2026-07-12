@@ -135,7 +135,26 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(PROJECT_ROOT, "pulse_ai.db")
 
 # Verify database exists and has data, if not backfill it
-if not os.path.exists(DB_PATH):
+db_needs_init = True
+if os.path.exists(DB_PATH):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM encounters")
+        count = cursor.fetchone()[0]
+        if count > 0:
+            db_needs_init = False
+        conn.close()
+    except Exception:
+        db_needs_init = True
+
+if db_needs_init:
+    # If file exists but is corrupt/empty, remove it first to ensure clean backfill
+    if os.path.exists(DB_PATH):
+        try:
+            os.remove(DB_PATH)
+        except Exception:
+            pass
     from src.utils.backfill import run_backfill
     run_backfill(num_days=30, events_per_day=85)
 
