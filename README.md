@@ -1,8 +1,5 @@
 # Pulse AI - Revenue Cycle Management (RCM) Intelligence Platform
 
-[![CI Pipeline](https://github.com/Navneet-Scaler/PulseAI/actions/workflows/ci.yml/badge.svg)](https://github.com/Navneet-Scaler/PulseAI/actions)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge.svg)](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)
-
 ---
 
 ### **[GitHub](https://github.com/Navneet-Scaler/PulseAI) | [Streamlit Demo](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)**
