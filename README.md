@@ -58,16 +58,25 @@ The system utilizes a structured, event-driven data flow executing across seven 
 ## 3. Screenshots & Visual Walkthrough
 
 ### Interactive Operational Command Center
-![Streamlit Dashboard](docs/images/dashboard.png)
-*Figure 1: Streamlit Dashboard highlighting core RCM KPIs, dynamic threshold tuning, and cash-flow aging buckets.*
+<p align="center">
+  <img src="docs/images/dashboard.png" width="100%" alt="Streamlit Dashboard Command Center">
+  <br>
+  <em>Figure 1: Streamlit Dashboard highlighting core RCM KPIs, dynamic threshold tuning, and cash-flow aging buckets.</em>
+</p>
 
 ### API Documentation & Telemetry
-![API Documentation](docs/images/api_docs.png)
-*Figure 2: FastAPI Swagger interactive documentation for telemetry collection and claim status tracking.*
+<p align="center">
+  <img src="docs/images/api_docs.png" width="100%" alt="API Documentation Overview">
+  <br>
+  <em>Figure 2: FastAPI Swagger interactive documentation for telemetry collection and claim status tracking.</em>
+</p>
 
 ### Analytics Database Performance
-![SQL Result](docs/images/sql_result.png)
-*Figure 3: Monitored SQL console executing trust horizon calibration to evaluate confidence scores vs. auditor correction rates.*
+<p align="center">
+  <img src="docs/images/sql_result.png" width="100%" alt="SQL Result Terminal Output">
+  <br>
+  <em>Figure 3: Monitored SQL console executing trust horizon calibration to evaluate confidence scores vs. auditor correction rates.</em>
+</p>
 
 ---
 
