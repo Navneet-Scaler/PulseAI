@@ -1,70 +1,89 @@
 # Pulse AI - Revenue Cycle Management (RCM) Intelligence Platform
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/Navneet-Scaler/PulseAI)
+[![Live Dashboard](https://img.shields.io/badge/Live-Dashboard-green?logo=streamlit)](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)
+
+### The Problem
+Healthcare organizations lose millions in revenue due to insurance claim denials caused by incorrect clinical coding (CPT/ICD-10 errors). While autonomous AI coding speeds up submissions, routing low-confidence predictions directly to payers results in high denial rates, while routing too many claims to human auditors increases administrative overhead and labor costs.
+
+### The Solution
+**Pulse AI** is an event-driven Revenue Cycle Management (RCM) billing intelligence and simulation platform. It models autonomous medical coding, human-in-the-loop (HIL) audit routing, payer claim adjudication, and analytics tracking. The system features a dynamic threshold optimizer that calculates an empirical "Trust Horizon" to find the financial sweet spot balancing auditor labor costs against prevented denials.
+
+### The Target Audience
+This platform is designed for **RCM Directors**, **Healthcare Product Managers**, and **Clinical AI Engineers** to test autonomous coding thresholds, track billing KPIs, and establish quality gates before deploying AI models to live billing pipelines.
+
 ---
 
-### **[GitHub](https://github.com/Navneet-Scaler/PulseAI) | [Streamlit Demo](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)**
-
----
-
-Pulse AI is an event-driven Revenue Cycle Management (RCM) simulation and observability platform. The system models autonomous AI-driven medical coding, human-in-the-loop audit routing, payer claim adjudication, and analytics tracking.
-
-* **Problem Statement**: Inefficient clinical coding and lack of transparent audit trails lead to high claim denial rates and severe revenue leakage for healthcare organizations.
-* **Solution Statement**: Pulse AI provides a simulated end-to-end coding pipeline that dynamically tunes autonomous submission thresholds using an empirical "Trust Horizon" to minimize denials and audit labor overhead.
-
----
-
-## 1. System Architecture & The Claims Journey
-
-Pulse AI simulates the lifecycle of a patient encounter as it flows from clinical documentation to financial reconciliation. Below is the event-driven data flow:
+### Visual Workflow & Pipeline Architecture
 
 ```mermaid
 graph LR
-    %% Theme Setup
-    classDef default fill:#111827,stroke:#1f2937,stroke-width:1px,color:#f3f4f6;
-    classDef highlight fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
-    classDef success fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
-    classDef warning fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
+    %% Styling Classes
+    classDef input fill:#1E293B,stroke:#475569,stroke-width:1px,color:#F8FAFC;
+    classDef engine fill:#0F172A,stroke:#0D9488,stroke-width:2px,color:#F1F5F9;
+    classDef metric fill:#1E293B,stroke:#334155,stroke-width:1px,color:#F8FAFC;
+    classDef gate fill:#7F1D1D,stroke:#F87171,stroke-width:1.5px,color:#FEE2E2;
+    classDef pass fill:#064E3B,stroke:#34D399,stroke-width:1.5px,color:#D1FAE5;
 
-    A[1. Ingest Note] --> B(2. Autonomous AI Coder)
-    B -->|Low Confidence| C(3. Auditor Review)
-    B -->|High Confidence| D(4. Claim Submitted)
-    C --> D
-    D --> E(5. Payer Adjudication)
-    E --> F[6. SQL & BI Dashboard]
+    %% Data Nodes
+    A["EHR Clinical Notes <br> (Patient Encounters)"]:::input
+    B["AI Autonomous Coder <br> (CPT / ICD-10 Predictions)"]:::input
 
-    class A default;
-    class B highlight;
-    class C warning;
-    class D default;
-    class E success;
-    class F highlight;
+    %% Processing Nodes
+    C{"Confidence Router <br> (Confidence vs. Threshold)"}:::engine
+    D["Human Auditor Queue <br> (Error Correction & Review)"]:::engine
+    E["Payer Adjudication Engine <br> (Rule-based Claim processing)"]:::engine
+
+    %% Analytics & Observability Nodes
+    F["SQLite Analytics Database <br> (Fact & Aggregation Tables)"]:::metric
+    G["Streamlit Command Center <br> (KPI Tracking & Aging Buckets)"]:::metric
+    H["Quality Release Gates <br> (Accuracy & Compliance Gates)"]:::gate
+
+    %% Connections
+    A --> B
+    B --> C
+    C -->|Score < Threshold| D
+    C -->|Score >= Threshold| E
+    D --> E
+    E --> F
+    F --> G
+    G --> H
 ```
 
-### The RCM Story: A Day in the Life
-To see the system in action, follow how a single chart is processed:
-1. **Sarah (The Patient)**: Visits the clinic presenting with acute chest pressure and COPD exacerbation.
-2. **Dr. Chen (The Physician)**: Documents the clinical visit details as unstructured narrative notes in the EHR.
-3. **Pulse AI Coder (Autonomous AI Engine)**: Modeled after autonomous clinical coding platforms like **Arintra**, the engine parses Dr. Chen's narrative notes to predict corresponding ICD-10 diagnostic codes and CPT procedure codes, outputting a prediction confidence score.
-4. **James (The Claims Auditor)**: If the AI confidence score drops below the data-driven **Trust Horizon (0.75)**, the claim is routed to James's queue. He reviews the code predictions and corrects any inaccuracies.
-5. **The Payer (Insurance Adjudicator)**: The finalized claim is submitted. Clean claims are paid out at contracted allowed rates, while claims carrying uncorrected coding errors are denied.
-6. **The Executive Team**: Monitors the live Streamlit dashboard to track automated billing efficiency, leakage recovery, and denial rates.
+> [!NOTE]
+> ### 💡 Understanding the Business: The "Doctor, AI, and Insurance" Story
+> 
+> **1. What is actually happening here?**
+> * **The Doctor's Note**: When a patient (like **Sarah**) visits the clinic with chest pressure, her physician (**Dr. Chen**) writes a clinical note detailing symptoms and treatments.
+> * **The AI Coder**: Hospitals use autonomous clinical coding software (like **Arintra**'s direct notes-to-billing engine) to read these notes and translate them into standardized billing codes (ICD-10 for diagnoses, CPT for procedures).
+> * **Pulse AI's Simulation**: Our system simulates this entire lifecycle—generating synthetic EHR notes, predicting codes, and routing them based on confidence scores to human review queues or straight to insurers.
+> 
+> **2. Why do we need the "Trust Horizon" router?**
+> * **The Trade-Off**:
+>   * If the AI submits a low-confidence code directly, the insurer (**Payer**) denies the claim (90% denial rate on errors), resulting in uncollected revenue (leakage) and delayed payments (high AR Days).
+>   * If the hospital audits *every* claim, they spend too much on auditor labor (e.g., $5 per audit), causing bottlenecks.
+> * **The Solution**: The platform calculates the **Trust Horizon**—the confidence threshold (0.75) where human corrections drop below 5%. AI predictions above this threshold are safely auto-billed, while below-threshold predictions go to human review, maximizing net revenue.
+> 
+> **3. Who buys this?**
+> * **Healthcare Systems & Hospitals**: To audit their RCM operations, model cash flow impact, and discover specialty-level leakage.
+> * **Healthtech Developers**: To run A/B testing on explainability features (e.g., highlighting clinical evidence to speed up human audit times).
 
 ---
 
-## 2. Key Operational Metrics
+## Key Metrics
 
-| Metric | Business Definition |
-| :--- | :--- |
-| **Automation Rate** | The percentage of claims submitted directly to insurance without requiring human auditor intervention. |
-| **First-Pass Acceptance Rate** | The percentage of submitted claims paid on the first submission without being denied. |
-| **Denial Rate** | The percentage of total submitted claims rejected or denied by insurance carriers. |
-| **AR Days (Days in AR)** | The average number of days it takes to collect payments from payers after claim submission. |
-| **Auditor Time** | The average duration in seconds spent by a human auditor reviewing and resolving a low-confidence claim. |
-| **Leakage Amount** | The financial difference between the contracted allowed amount and the actual paid amount due to uncaught errors. |
+| Metric | Business Definition | Formula / Logic |
+| :--- | :--- | :--- |
+| **Automation Rate** | The percentage of claims submitted directly without human audit. | `Auto-Billed Claims / Total Claims` |
+| **First-Pass Acceptance Rate** | The percentage of submitted claims paid on the first submission. | `Paid Claims (without audit) / Total Claims` |
+| **Denial Rate** | The percentage of claims rejected by insurance payers. | `Denied Claims / Total Claims` |
+| **AR Days (Days in AR)** | The average collection cycle time for outstanding claims. | `Mean(Payer Response Date - Submission Date)` |
+| **Auditor Time** | The average time a human auditor spends reviewing a claim. | `Mean(Audit Duration Seconds)` |
+| **Leakage Amount** | Billed revenue lost due to incorrect codes or underpayments. | `Sum(Contracted Allowed Amount - Paid Amount)` |
 
 ---
 
-## 3. Screenshots & Visual Walkthrough
+## Screenshots & Visual Walkthrough
 
 ### Interactive Operational Command Center
 <p align="center">
@@ -89,62 +108,23 @@ To see the system in action, follow how a single chart is processed:
 
 ---
 
-## 4. Key Findings & Business Impact
+## Key Findings & Business Impact
 
-### Results Summary
 * **Optimal Threshold**: The empirical "Trust Horizon" analysis identified **0.75** as the optimal confidence threshold, balancing auditor labor costs against prevented denial penalties.
 * **Financial Recovery**: Optimizing the threshold simulated a **14% decrease in overall denial rates** and recovered **$42,000 in uncollected allowed revenue** over a 30-day trial.
 * **Auditor Efficiency**: Showing inline evidence citations reduced human claim audit time from **182 seconds to 125 seconds per claim** (-31.3%) without increasing error rates.
 
-### Why This Matters
-* **Trust Horizon**: Implementing data-driven thresholds guarantees that the system only automates claims whose predicted error probability is within tolerable risk bounds.
-* **Revenue Leakage**: Identifying specificity mismatches between unstructured EHR charts and submitted billing codes protects hospitals from structural underpayments.
-* **Explainability**: Providing auditable evidence spans builds trust with clinicians and payer auditors, speeding up claim appeals and reducing administrative friction.
+---
+
+## Operational Release Gate & Quality Checks
+To prevent unsafe automation from shipping to production, the pipeline enforces strict deployment limits:
+* All unit tests must pass (`100%` success rate).
+* AI model accuracy must exceed **80%** in the sandbox calibration environment before updating autonomous routing rules.
+* Any code modifications affecting billing rules must pass validation schemas under `schemas/telemetry_event.json` to prevent downstream claim processing failures.
 
 ---
 
-## 5. Directory Structure
-```
-Pulse AI/
-├── docs/
-│   ├── images/                # Visual screenshots and dashboard mockups
-│   └── data_dictionary.md     # SQL schema and event definitions
-├── sql/
-│   ├── schema.sql             # SQLite database schema
-│   └── kpi_calculations.sql   # Advanced KPI analytics queries
-├── schemas/
-│   └── telemetry_event.json   # Telemetry event JSON Schema
-├── notebooks/
-│   └── ab_testing_analysis.ipynb # A/B testing & statistical power analysis
-├── src/
-│   ├── api/
-│   │   └── main.py            # FastAPI Web Server
-│   ├── core/
-│   │   ├── ai_coder.py        # Autonomous AI Coder simulation
-│   │   ├── auditor.py         # Human Auditor simulator
-│   │   ├── denial_simulator.py # Insurance Adjudication simulator
-│   │   └── generator.py       # EHR encounter generator
-│   ├── schemas/
-│   │   └── validation.py      # Pydantic v2 validation classes
-│   ├── utils/
-│   │   ├── backfill.py        # Database backfill (2,550 historical claims)
-│   │   ├── export.py          # Table exporter to CSV
-│   │   └── replay.py          # API ingestion replay stream
-│   └── app.py                 # Streamlit Command Center
-├── tests/
-│   └── test_rcm.py            # RCM core unit tests
-├── requirements.txt           # Python dependencies
-├── .env.example               # Configuration environment settings
-├── LICENSE                    # MIT License
-└── README.md                  # Project overview (this file)
-```
-
-For a comprehensive explanation of database columns and telemetry payloads, see the [PulseAI Data Dictionary](docs/data_dictionary.md).
-
----
-
-## 6. A/B Testing Analysis
-
+## A/B Testing & Explainability Analysis
 The repository includes a detailed experimentation analysis notebook in [`notebooks/ab_testing_analysis.ipynb`](notebooks/ab_testing_analysis.ipynb) comparing control (standard AI code recommendations) vs. treatment (AI recommendations with inline evidence spans).
 
 * **Input Data**: 1,200 simulated claims reviews split evenly (600 Control, 600 Treatment) over 14 days.
@@ -153,7 +133,15 @@ The repository includes a detailed experimentation analysis notebook in [`notebo
 
 ---
 
-## 7. Setup & Run Instructions
+## Project Impact
+* **2,550** Simulated claims processed spanning a 30-day historical window.
+* **14%** Reduction in overall denial rates through Trust Horizon threshold optimization.
+* **31.3%** Decrease in average human auditor review times using explainable evidence spans.
+* **6** Clinical specialties modeled (Cardiology, Endocrinology, Nephrology, Neurology, Orthopedics, Primary Care).
+
+---
+
+## Quick Start Setup
 
 All installation and run commands assume **Python 3.10** and should be executed from the project root.
 
@@ -193,19 +181,4 @@ Execute the unit and integration tests to verify code compliance:
 ```bash
 python3 -m pytest
 ```
-
----
-
-## 8. Continuous Integration & Quality Gates
-
-### Automated CI Pipeline
-This project runs tests and quality checks via GitHub Actions on every pull request and push to the `main` or `master` branches:
-* **Linting**: Syntactic verification of codebase formatting.
-* **Unit Tests**: Full test suite verifying telemetry ingestion, generator seeding, and Pydantic validation.
-* **Smoke Tests**: Verifies Streamlit app and FastAPI startup processes.
-
-### Release Quality Gates
-To prevent unsafe automation from shipping to production, the pipeline enforces strict deployment limits:
-* All unit tests must pass (`100%` success rate).
-* AI model accuracy must exceed **80%** in the sandbox calibration environment before updating autonomous routing rules.
-* Any code modifications affecting billing rules must pass validation schemas under `schemas/telemetry_event.json` to prevent downstream claim processing failures.
+For a comprehensive explanation of database columns and telemetry payloads, see the [PulseAI Data Dictionary](docs/data_dictionary.md).
