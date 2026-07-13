@@ -169,14 +169,15 @@ if db_needs_init:
     from src.utils.backfill import run_backfill
     run_backfill(num_days=30, events_per_day=85)
 
-def load_data():
+@st.cache_data(show_spinner="Loading RCM telemetry...")
+def load_data(_db_mtime):
     conn = sqlite3.connect(DB_PATH)
-    
+
     enc_df = pd.read_sql_query("SELECT * FROM encounters", conn)
     ai_df = pd.read_sql_query("SELECT * FROM ai_coding_logs", conn)
     audit_df = pd.read_sql_query("SELECT * FROM audit_logs", conn)
     claims_df = pd.read_sql_query("SELECT * FROM claims", conn)
-    
+
     conn.close()
     
     # Merge datasets for analysis
@@ -207,33 +208,41 @@ def load_data():
     
     return merged, enc_df, ai_df, audit_df, claims_df
 
-df, encounters, ai_logs, audit_logs, claims = load_data()
+df, encounters, ai_logs, audit_logs, claims = load_data(os.path.getmtime(DB_PATH))
 
 # ----------------- SIDEBAR FILTERS & ACTIONS -----------------
 st.sidebar.subheader("PULSE RCM FILTER SUITE")
 
+if st.sidebar.button("Reset Filters", use_container_width=True):
+    for key in ("specialty_filter", "payer_filter", "model_filter", "date_filter"):
+        st.session_state.pop(key, None)
+    st.rerun()
+
 # Specialty Filter
 specialties = ["All Specialties"] + sorted(df["specialty"].dropna().unique().tolist())
-selected_specialty = st.sidebar.selectbox("Medical Specialty", specialties)
+selected_specialty = st.sidebar.selectbox("Medical Specialty", specialties, key="specialty_filter")
 
 # Payer Filter
 payers = ["All Payers"] + sorted(df["payer_id_enc"].dropna().unique().tolist())
-selected_payer = st.sidebar.selectbox("Insurance Payer", payers)
+selected_payer = st.sidebar.selectbox("Insurance Payer", payers, key="payer_filter")
 
 # Model Filter
 models = ["All Models"] + sorted(df["ai_model_version"].dropna().unique().tolist())
-selected_model = st.sidebar.selectbox("AI Model Version", models)
+selected_model = st.sidebar.selectbox("AI Model Version", models, key="model_filter")
 
 # Date Filter
 min_date = df["visit_date"].min().date()
 max_date = df["visit_date"].max().date()
-selected_dates = st.sidebar.slider("Date Range Selection", min_value=min_date, max_value=max_date, value=(min_date, max_date))
+selected_dates = st.sidebar.slider(
+    "Date Range Selection", min_value=min_date, max_value=max_date,
+    value=(min_date, max_date), key="date_filter"
+)
 
 # Filter DataFrame
 filtered_df = df[
-    (df["visit_date"].dt.date >= selected_dates[0]) & 
+    (df["visit_date"].dt.date >= selected_dates[0]) &
     (df["visit_date"].dt.date <= selected_dates[1])
-]
+].copy()
 if selected_specialty != "All Specialties":
     filtered_df = filtered_df[filtered_df["specialty"] == selected_specialty]
 if selected_payer != "All Payers":
@@ -241,8 +250,19 @@ if selected_payer != "All Payers":
 if selected_model != "All Models":
     filtered_df = filtered_df[filtered_df["ai_model_version"] == selected_model]
 
+st.sidebar.caption(f"{len(filtered_df):,} of {len(df):,} encounters match the current filters.")
+
+st.sidebar.download_button(
+    "Export Filtered Data (CSV)",
+    data=filtered_df.to_csv(index=False).encode("utf-8"),
+    file_name=f"pulse_rcm_export_{date.today().isoformat()}.csv",
+    mime="text/csv",
+    use_container_width=True,
+    disabled=filtered_df.empty
+)
+
 st.sidebar.subheader("SIMULATOR MODULE")
-if st.sidebar.button("Run Simulation Step"):
+if st.sidebar.button("Run Simulation Step", use_container_width=True):
     try:
         from src.api.main import run_simulation_step
         conn = sqlite3.connect(DB_PATH)
@@ -250,11 +270,15 @@ if st.sidebar.button("Run Simulation Step"):
         conn.close()
         # Modern toast notification that auto-fades
         st.toast(f"Claim simulation complete: {res['encounter_id']}", icon="✅")
-        # Reload dataset
-        df, encounters, ai_logs, audit_logs, claims = load_data()
+        # Invalidate cache so the freshly written row is picked up
+        load_data.clear()
         st.rerun()
     except Exception as e:
         st.sidebar.error(f"Simulation execution failed: {e}")
+
+if filtered_df.empty:
+    st.warning("No encounters match the current filter combination. Adjust the filters in the sidebar to see data.")
+    st.stop()
 
 # ----------------- MAIN LAYOUT & TABS -----------------
 st.title("Pulse Revenue Cycle Management Analytics Platform")
@@ -354,7 +378,7 @@ with tab1:
     filtered_df["claim_age"] = (today - filtered_df["visit_date"]).dt.days
     
     # Group into buckets for outstanding/unrecovered revenue
-    unpaid_claims = filtered_df[filtered_df["paid_amount"] == 0.0]
+    unpaid_claims = filtered_df[filtered_df["paid_amount"] == 0.0].copy()
     
     def get_aging_bucket(age):
         if age <= 10:
@@ -364,22 +388,25 @@ with tab1:
         else:
             return "21+ Days (Delinquent)"
             
-    unpaid_claims["aging_bucket"] = unpaid_claims["claim_age"].apply(get_aging_bucket)
-    
-    aging_data = unpaid_claims.groupby(["specialty", "aging_bucket"])["charge_amount"].sum().reset_index()
-    
-    fig_aging = px.bar(
-        aging_data,
-        x="specialty",
-        y="charge_amount",
-        color="aging_bucket",
-        title="Unrecovered Accounts Receivable by Aging Bucket & Specialty",
-        labels={"charge_amount": "Outstanding Amount ($)", "specialty": "Clinical Division", "aging_bucket": "AR Age Bucket"},
-        color_discrete_sequence=["#2563eb", "#f59e0b", "#ef4444"],
-        template="plotly_dark"
-    )
-    fig_aging.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_aging, use_container_width=True)
+    if unpaid_claims.empty:
+        st.info("No outstanding (unpaid) claims in the current filter selection.")
+    else:
+        unpaid_claims["aging_bucket"] = unpaid_claims["claim_age"].apply(get_aging_bucket)
+
+        aging_data = unpaid_claims.groupby(["specialty", "aging_bucket"])["charge_amount"].sum().reset_index()
+
+        fig_aging = px.bar(
+            aging_data,
+            x="specialty",
+            y="charge_amount",
+            color="aging_bucket",
+            title="Unrecovered Accounts Receivable by Aging Bucket & Specialty",
+            labels={"charge_amount": "Outstanding Amount ($)", "specialty": "Clinical Division", "aging_bucket": "AR Age Bucket"},
+            color_discrete_sequence=["#2563eb", "#f59e0b", "#ef4444"],
+            template="plotly_dark"
+        )
+        fig_aging.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig_aging, use_container_width=True)
     
     render_inference(
         "Executive Dashboard Health Summary",
@@ -497,7 +524,7 @@ with tab2:
         )
         fig_calib.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_calib, use_container_width=True)
-        
+
     render_inference(
         "Confidence and Calibration Insights",
         "The calibration curve plots how accurate the AI system is at different levels of estimated confidence. "
@@ -506,6 +533,63 @@ with tab2:
         "that claims with confidence above 0.75 are highly accurate, justifying their automatic submission without audit. "
         "Conversely, claims falling below 0.75 carry significant error rates, validating the human-in-the-loop routing threshold."
     )
+
+    # ----------------- TRUST HORIZON ANALYSIS -----------------
+    st.markdown("---")
+    st.markdown("### Trust Horizon: Data-Driven Autonomous Billing Cutoff")
+    st.write(
+        "Rather than assuming the current 0.75 routing threshold is optimal, the trust horizon finds it empirically: "
+        "the lowest confidence decile, among previously audited claims, where the human auditor's correction rate "
+        "first drops below 5% and stays below 5% for every higher decile."
+    )
+
+    audited_hist_df = filtered_df[filtered_df["decision"].notna()].copy()
+
+    if audited_hist_df.empty:
+        st.info("No historically audited claims in the current filter selection to compute a trust horizon.")
+    else:
+        audited_hist_df["confidence_decile"] = (audited_hist_df["confidence_score"] * 10).apply(np.floor) / 10
+        trust_curve = audited_hist_df.groupby("confidence_decile").agg(
+            total=("encounter_id", "count"),
+            modified=("decision", lambda x: (x == "corrected").sum())
+        ).reset_index()
+        trust_curve["modification_rate"] = trust_curve["modified"] / trust_curve["total"]
+        trust_curve = trust_curve.sort_values("confidence_decile", ascending=False).reset_index(drop=True)
+
+        # Walk down from the highest confidence decile while the correction rate stays under 5%.
+        trust_cutoff = None
+        for _, row in trust_curve.iterrows():
+            if row["modification_rate"] < 0.05:
+                trust_cutoff = row["confidence_decile"]
+            else:
+                break
+
+        col_th_1, col_th_2 = st.columns([1, 2])
+        with col_th_1:
+            if trust_cutoff is not None:
+                st.metric("Recommended Autonomous Billing Cutoff", f"{trust_cutoff:.1f}")
+                delta = trust_cutoff - 0.75
+                st.caption(
+                    f"{'Lower' if delta < 0 else 'Higher' if delta > 0 else 'Matches'} than the current 0.75 threshold "
+                    f"({delta:+.2f})."
+                )
+            else:
+                st.metric("Recommended Autonomous Billing Cutoff", "N/A")
+                st.caption("No confidence decile currently sustains a sub-5% correction rate; keep full human review.")
+
+        with col_th_2:
+            fig_trust = px.bar(
+                trust_curve.sort_values("confidence_decile"),
+                x="confidence_decile",
+                y="modification_rate",
+                title="Auditor Correction Rate by Confidence Decile",
+                labels={"confidence_decile": "Confidence Decile", "modification_rate": "Correction Rate"},
+                color_discrete_sequence=["#a855f7"],
+                template="plotly_dark"
+            )
+            fig_trust.add_hline(y=0.05, line_dash="dash", line_color="#ef4444", annotation_text="5% risk line")
+            fig_trust.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", yaxis_tickformat=".0%")
+            st.plotly_chart(fig_trust, use_container_width=True)
 
 # ----------------- TAB 3: DENIAL ANALYSIS -----------------
 with tab3:
