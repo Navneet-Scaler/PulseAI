@@ -1,11 +1,11 @@
 # Pulse AI - Revenue Cycle Management (RCM) Intelligence Platform
 
 [![CI Pipeline](https://github.com/Navneet-Scaler/PulseAI/actions/workflows/ci.yml/badge.svg)](https://github.com/Navneet-Scaler/PulseAI/actions)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge.svg)](https://pulseai.streamlit.app)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge.svg)](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)
 
 ---
 
-### **[GitHub](https://github.com/Navneet-Scaler/PulseAI) | [Streamlit Demo](https://pulseai.streamlit.app) | [Power BI Dashboard](https://github.com/Navneet-Scaler/PulseAI/tree/main/exported_assets)**
+### **[GitHub](https://github.com/Navneet-Scaler/PulseAI) | [Streamlit Demo](https://navneet-scaler-pulseai-srcapp-yyiaqz.streamlit.app/)**
 
 ---
 
@@ -38,7 +38,7 @@ The system utilizes a structured, event-driven data flow executing across seven 
 4. **Claim Submission**: Claims are packaged and transmitted to insurance payers.
 5. **Denial Simulation**: Payers process claims, applying rule-based denials (90% denial rate on claims containing coding errors).
 6. **SQL Analytics**: Transactional records are persisted in a local SQLite database for downstream reporting.
-7. **Dashboard/BI Export**: Telemetry is exported to flat CSVs for Power BI reporting and Streamlit command center visualization.
+7. **Dashboard Export**: Telemetry is exported to flat CSVs for local analytics and Streamlit command center visualization.
 
 ---
 
