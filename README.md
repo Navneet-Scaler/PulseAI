@@ -13,29 +13,41 @@ Pulse AI is an event-driven Revenue Cycle Management (RCM) simulation and observ
 
 ---
 
-## 1. System Architecture & Claims Lifecycle
+## 1. System Architecture & The Claims Journey
 
-The system utilizes a structured, event-driven data flow executing across seven distinct stages:
+Pulse AI simulates the lifecycle of a patient encounter as it flows from clinical documentation to financial reconciliation. Below is the event-driven data flow:
 
+```mermaid
+graph LR
+    %% Theme Setup
+    classDef default fill:#111827,stroke:#1f2937,stroke-width:1px,color:#f3f4f6;
+    classDef highlight fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
+    classDef success fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
+    classDef warning fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
+
+    A[1. Ingest Note] --> B(2. Autonomous AI Coder)
+    B -->|Low Confidence| C(3. Auditor Review)
+    B -->|High Confidence| D(4. Claim Submitted)
+    C --> D
+    D --> E(5. Payer Adjudication)
+    E --> F[6. SQL & BI Dashboard]
+
+    class A default;
+    class B highlight;
+    class C warning;
+    class D default;
+    class E success;
+    class F highlight;
 ```
-[1. Chart Ingestion] ────> [2. AI Coding] ──(Confidence Score)──> [3. Auditor Review (HIL)]
-                                  │                                      │
-                                  ├──────────(Auto-Billed Claims)────────┤
-                                  ▼                                      ▼
-                           [4. Claim Submission] ────────────────────────┘
-                                  │
-                                  ▼
-                           [5. Denial Simulation] ───> [6. SQL Analytics (DB)] ───> [7. Dashboard/BI Export]
-```
 
-### End-to-End Pipeline Stages
-1. **Chart Ingestion**: Synthetic EHR encounters with clinical notes are generated and registered.
-2. **AI Coding**: An AI model parses clinical notes, predicting ICD-10 diagnostic codes and CPT procedural codes with a confidence score.
-3. **Auditor Review**: Claims with confidence scores below a tunable threshold are routed to human auditor queues for review and error correction.
-4. **Claim Submission**: Claims are packaged and transmitted to insurance payers.
-5. **Denial Simulation**: Payers process claims, applying rule-based denials (90% denial rate on claims containing coding errors).
-6. **SQL Analytics**: Transactional records are persisted in a local SQLite database for downstream reporting.
-7. **Dashboard Export**: Telemetry is exported to flat CSVs for local analytics and Streamlit command center visualization.
+### The RCM Story: A Day in the Life
+To see the system in action, follow how a single chart is processed:
+1. **Sarah (The Patient)**: Visits the clinic presenting with acute chest pressure and COPD exacerbation.
+2. **Dr. Chen (The Physician)**: Documents the clinical visit details as unstructured narrative notes in the EHR.
+3. **Pulse AI Coder (Autonomous AI Engine)**: Modeled after autonomous clinical coding platforms like **Arintra**, the engine parses Dr. Chen's narrative notes to predict corresponding ICD-10 diagnostic codes and CPT procedure codes, outputting a prediction confidence score.
+4. **James (The Claims Auditor)**: If the AI confidence score drops below the data-driven **Trust Horizon (0.75)**, the claim is routed to James's queue. He reviews the code predictions and corrects any inaccuracies.
+5. **The Payer (Insurance Adjudicator)**: The finalized claim is submitted. Clean claims are paid out at contracted allowed rates, while claims carrying uncorrected coding errors are denied.
+6. **The Executive Team**: Monitors the live Streamlit dashboard to track automated billing efficiency, leakage recovery, and denial rates.
 
 ---
 
