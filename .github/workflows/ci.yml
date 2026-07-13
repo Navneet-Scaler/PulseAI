@@ -25,6 +25,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Initialize Database
+      run: |
+        python -m src.utils.backfill
+
     - name: Run pytest
       run: |
         python -m pytest -v --cov=src --cov-report=term-missing
